@@ -1,0 +1,158 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Description:
+  The sample.
+
+Resources:
+  CalculateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Does some test calculation.
+      FunctionName: calculate
+      Runtime: python3.6
+      Handler: calculate.handler
+      CodeUri: ./sources
+      Timeout: 5
+      Tags:
+        Name: Calculate function
+
+  RaiseErrorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Raises error.
+      FunctionName: raise_error
+      Runtime: python3.6
+      Handler: raise_error.handler
+      CodeUri: ./sources
+      Timeout: 5
+      Tags:
+        Name: RaiseError function
+
+  DoLongTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Does "long running" task.
+      FunctionName: do_long_task
+      Runtime: python3.6
+      Handler: do_long_task.handler
+      CodeUri: ./sources
+      Timeout: 15
+      Tags:
+        Name: DoLongTask function
+
+  InvokeCalculateFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: InvokeCalculateFunctionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt CalculateFunction.Arn
+
+  CallCalculateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Calls 'Calculate' function.
+      FunctionName: call_calculate
+      Runtime: python3.6
+      Handler: call_function.handler
+      CodeUri: ./sources
+      Role: !GetAtt InvokeCalculateFunctionRole.Arn
+      Timeout: 10
+      Environment:
+        Variables:
+          FUNCTION: !Ref CalculateFunction
+          PAYLOAD: '{ "a": 1.2, "b": 2.3 }'
+      Tags:
+        Name: CallCalculateFunction
+
+  InvokeRaiseErrorFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: InvokeRaiseErrorFunctionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt RaiseErrorFunction.Arn
+
+  CallRaiseErrorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Calls 'RaiseError' function.
+      FunctionName: call_raise_error
+      Runtime: python3.6
+      Handler: call_function.handler
+      CodeUri: ./sources
+      Role: !GetAtt InvokeRaiseErrorFunctionRole.Arn
+      Timeout: 10
+      Environment:
+        Variables:
+          FUNCTION: !Ref RaiseErrorFunction
+      Tags:
+        Name: CallRaiseErrorFunction
+
+  InvokeDoLongTaskFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: InvokeDoLongTaskFunctionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt DoLongTaskFunction.Arn
+
+  CallDoLongTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Calls 'DoLongTask' function.
+      FunctionName: call_do_long_task
+      Runtime: python3.6
+      Handler: call_function.handler
+      CodeUri: ./sources
+      Role: !GetAtt InvokeDoLongTaskFunctionRole.Arn
+      Timeout: 30
+      Environment:
+        Variables:
+          FUNCTION: !Ref DoLongTaskFunction
+          PAYLOAD: '{ "a": 1.2, "b": 2.3 }'
+      Tags:
+        Name: CallDoLongTaskFunction
