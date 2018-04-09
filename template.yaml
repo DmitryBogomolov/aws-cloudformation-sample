@@ -1,3 +1,6 @@
+Name: my-test-app-1
+Bucket: my-aws-buckets
+
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 
@@ -12,7 +15,7 @@ Resources:
       FunctionName: calculate
       Runtime: python3.6
       Handler: calculate.handler
-      CodeUri: ./sources
+      CodeUri: ./sources/calculate.py
       Timeout: 5
       Tags:
         Name: Calculate function
@@ -24,7 +27,7 @@ Resources:
       FunctionName: raise_error
       Runtime: python3.6
       Handler: raise_error.handler
-      CodeUri: ./sources
+      CodeUri: ./sources/raise_error.py
       Timeout: 5
       Tags:
         Name: RaiseError function
@@ -36,7 +39,7 @@ Resources:
       FunctionName: do_long_task
       Runtime: python3.6
       Handler: do_long_task.handler
-      CodeUri: ./sources
+      CodeUri: ./sources/do_long_task.py
       Timeout: 15
       Tags:
         Name: DoLongTask function
@@ -70,7 +73,7 @@ Resources:
       FunctionName: call_calculate
       Runtime: python3.6
       Handler: call_function.handler
-      CodeUri: ./sources
+      CodeUri: ./sources/call_function.py
       Role: !GetAtt InvokeCalculateFunctionRole.Arn
       Timeout: 10
       Environment:
@@ -109,7 +112,7 @@ Resources:
       FunctionName: call_raise_error
       Runtime: python3.6
       Handler: call_function.handler
-      CodeUri: ./sources
+      CodeUri: ./sources/call_function.py
       Role: !GetAtt InvokeRaiseErrorFunctionRole.Arn
       Timeout: 10
       Environment:
@@ -147,7 +150,7 @@ Resources:
       FunctionName: call_do_long_task
       Runtime: python3.6
       Handler: call_function.handler
-      CodeUri: ./sources
+      CodeUri: ./sources/call_function.py
       Role: !GetAtt InvokeDoLongTaskFunctionRole.Arn
       Timeout: 30
       Environment:
