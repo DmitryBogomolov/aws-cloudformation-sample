@@ -1,4 +1,4 @@
-Name: my-test-app-1
+Name: my_test_app_1
 Bucket: my-aws-buckets
 
 AWSTemplateFormatVersion: 2010-09-09
