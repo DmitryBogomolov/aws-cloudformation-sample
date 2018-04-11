@@ -19,7 +19,12 @@ yaml.add_representer(Custom, custom_representer)
 
 def load_template():
     with open(os.path.abspath(TEMPLATE_NAME), 'r') as f:
-        return yaml.load(f)
+        template = yaml.load(f)
+    if not template.get('Name'):
+        raise RuntimeError('"Name" field is absent.')
+    if not template.get('Bucket'):
+        raise RuntimeError('"Bucket" field is absent.')
+    return template
 
 def get_archive_name(code_uri):
     name = '_'.join(os.path.split(os.path.normpath(os.path.splitext(code_uri)[0])))
