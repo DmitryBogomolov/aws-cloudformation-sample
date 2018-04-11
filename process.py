@@ -12,10 +12,9 @@ def update_code_uri(template):
         resource['Properties']['CodeUri'] = s3_base_path + '/' + archive_name
 
 def update_function_names(template):
-    base_name = template['Name']
     for resource in helper.get_functions(template):
         name = resource['Properties']['FunctionName']
-        resource['Properties']['FunctionName'] = base_name + '-' + name
+        resource['Properties']['FunctionName'] = helper.get_function_name(template, name)
 
 def delete_custom_fields(template):
     template.pop('Name')

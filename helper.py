@@ -17,6 +17,9 @@ for tag in ('!GetAtt', '!Ref'):
     yaml.add_constructor(tag, custom_constructor)
 yaml.add_representer(Custom, custom_representer)
 
+def ensure_folder():
+    os.makedirs(PACKAGE_PATH, exist_ok=True)
+
 def load_template():
     with open(os.path.abspath(TEMPLATE_NAME), 'r') as f:
         template = yaml.load(f)
@@ -36,5 +39,5 @@ def is_function_resource(item):
 def get_functions(template):
     return list(filter(is_function_resource, template['Resources'].values()))
 
-def ensure_folder():
-    os.makedirs(PACKAGE_PATH, exist_ok=True)
+def get_function_name(template, name):
+    return template['Name'] + '-' + name
