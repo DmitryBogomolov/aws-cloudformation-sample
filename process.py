@@ -5,11 +5,11 @@ import yaml
 import helper
 
 def update_code_uri(template):
-    bucket_path = 's3://{0}/{1}'.format(template['Bucket'], template['Name'])
+    s3_base_path = 's3://{0}/{1}'.format(template['Bucket'], template['Name'])
     for resource in helper.get_functions(template):
         code_uri = resource['Properties']['CodeUri']
         archive_name = helper.get_archive_name(code_uri)
-        resource['Properties']['CodeUri'] = bucket_path + '/' + archive_name
+        resource['Properties']['CodeUri'] = s3_base_path + '/' + archive_name
 
 def update_function_names(template):
     base_name = template['Name']
