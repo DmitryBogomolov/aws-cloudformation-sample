@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import os
 import yaml
 import helper
@@ -24,9 +22,10 @@ def save_template(template):
     with open(os.path.join(helper.PACKAGE_PATH, helper.TEMPLATE_NAME), 'w') as f:
         yaml.dump(template, f, default_flow_style=False)
 
-helper.ensure_folder()
-template = helper.load_template()
-update_code_uri(template)
-update_function_names(template)
-delete_custom_fields(template)
-save_template(template)
+def process():
+    helper.ensure_folder()
+    template = helper.load_template()
+    update_code_uri(template)
+    update_function_names(template)
+    delete_custom_fields(template)
+    save_template(template)

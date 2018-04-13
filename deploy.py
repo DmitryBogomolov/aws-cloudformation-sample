@@ -1,11 +1,9 @@
-#!/usr/bin/env python3
-
 import os
 import subprocess
 import helper
 
 # There is no *boto3.client('cloudformation').deploy* function - have to use *subprocess*.
-def deploy(template):
+def invoke_deploy(template):
     args = [
         'aws', 'cloudformation', 'deploy',
         '--stack-name', template['Name'],
@@ -17,5 +15,6 @@ def deploy(template):
         if proc.returncode > 0:
             raise RuntimeError('*aws cloudformation deploy* failed ({0})'.format(proc.returncode))
 
-template = helper.load_template()
-deploy(template)
+def deploy():
+    template = helper.load_template()
+    invoke_deploy(template)

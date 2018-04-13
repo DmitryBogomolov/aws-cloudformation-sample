@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-
-import sys
 import boto3
 import helper
 
@@ -13,7 +10,7 @@ def find_function_name(template, name):
             return helper.get_function_name(template, name)
     raise RuntimeError('Function *{0}* is not found.'.format(name))
 
-def invoke(full_name, payload=None):
+def call_lambda(full_name, payload):
     kwargs = { 'FunctionName': full_name }
     if payload:
         kwargs['Payload'] = payload
@@ -23,7 +20,8 @@ def invoke(full_name, payload=None):
         raise RuntimeError(payload)
     return payload
 
-template = helper.load_template()
-full_name = find_function_name(template, sys.argv[1])
-data = invoke(full_name, sys.argv[2] if len(sys.argv) > 2 else None)
-print(data)
+def invoke(name, payload=None):
+    template = helper.load_template()
+    full_name = find_function_name(template, name)
+    data = call_lambda(full_name, payload)
+    return data

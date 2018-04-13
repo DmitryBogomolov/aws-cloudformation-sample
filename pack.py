@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import os
 import yaml
 import zipfile
@@ -27,10 +25,9 @@ def upload_archives(template, cache):
     for archive_name, path_to_archive in cache.items():
         s3.upload_file(path_to_archive, template['Bucket'], template['Name'] + '/' + archive_name)
 
-skip_upload = False
-
-helper.ensure_folder()
-template = helper.load_template()
-cache = build_packages(template)
-if not skip_upload:
-    upload_archives(template, cache)
+def pack(skip_upload=False):
+    helper.ensure_folder()
+    template = helper.load_template()
+    cache = build_packages(template)
+    if not skip_upload:
+        upload_archives(template, cache)
