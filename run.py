@@ -28,18 +28,6 @@ for command in COMMANDS:
             dest = '--' + kwargs.pop('name')
             subparser.add_argument(dest, **kwargs)
 
-#process_parser = subparsers.add_parser('process')
-
-#pack_parser = subparsers.add_parser('pack')
-
-#deploy_parser = subparsers.add_parser('deploy')
-
-#delete_parser = subparsers.add_parser('delete')
-
-#invoke_parser = subparsers.add_parser('invoke')
-#invoke_parser.add_argument('--name', required=True)
-#invoke_parser.add_argument('--payload')
-
 ret = parser.parse_args()
 if not ret.command:
     parser.print_help()
