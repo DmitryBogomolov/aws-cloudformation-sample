@@ -15,6 +15,9 @@ COMMANDS = [
     ('invoke', [
         { 'name': 'name', 'required': True },
         'payload'
+    ]),
+    ('logs', [
+        { 'name': 'name', 'required': True }
     ])
 ]
 
