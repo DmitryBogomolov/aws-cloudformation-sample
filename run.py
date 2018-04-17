@@ -40,10 +40,7 @@ def main():
         parser.print_help()
         return 0
 
-    func = functions[command]
-    res = func(**args)
-    print(res)
-    return 0
+    return functions[command](**args)
 
 if __name__ == '__main__':
     sys.exit(main())
