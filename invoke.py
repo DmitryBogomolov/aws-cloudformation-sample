@@ -26,4 +26,4 @@ def invoke(name, payload=None):
             print('  {}, {}, in {}'.format(file_name, line, func))
             print('    ' + code)
         return
-    print(payload)
+    print(json.dumps(payload, indent=2))
