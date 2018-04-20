@@ -3,6 +3,6 @@ import helper
 
 cf = boto3.client('cloudformation')
 
-def delete():
+def remove():
     template = helper.load_template()
     cf.delete_stack(StackName=template['Name'])

@@ -6,7 +6,7 @@ import importlib
 import inspect
 import functools
 
-COMMANDS = ('process', 'pack', 'deploy', 'delete', 'invoke', 'logs')
+COMMANDS = ('process', 'pack', 'deploy', 'remove', 'invoke', 'logs')
 
 def is_entry_function(name, obj):
     return inspect.isfunction(obj) and obj.__name__ == name
