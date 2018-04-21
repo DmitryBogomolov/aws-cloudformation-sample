@@ -33,6 +33,9 @@ def get_archive_name(code_uri):
     name = '_'.join(os.path.split(os.path.normpath(os.path.splitext(code_uri)[0])))
     return name + '.zip'
 
+def get_processed_template_path():
+    return os.path.join(PACKAGE_PATH, TEMPLATE_NAME)
+
 def get_archive_path(archive_name):
     return os.path.join(PACKAGE_PATH, archive_name)
 

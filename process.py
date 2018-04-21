@@ -1,4 +1,3 @@
-import os
 import yaml
 import helper
 
@@ -19,7 +18,7 @@ def delete_custom_fields(template):
     template.pop('Bucket')
 
 def save_template(template):
-    with open(os.path.join(helper.PACKAGE_PATH, helper.TEMPLATE_NAME), 'w') as f:
+    with open(helper.get_processed_template_path(), 'w') as f:
         yaml.dump(template, f, default_flow_style=False)
 
 def process():

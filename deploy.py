@@ -1,4 +1,3 @@
-import os
 import subprocess
 import helper
 
@@ -8,7 +7,7 @@ def invoke_deploy(template):
         'aws', 'cloudformation', 'deploy',
         '--stack-name', template['Name'],
         '--capabilities', 'CAPABILITY_IAM',
-        '--template-file', os.path.join(helper.PACKAGE_PATH, helper.TEMPLATE_NAME)
+        '--template-file', helper.get_processed_template_path()
     ]
     with subprocess.Popen(args) as proc:
         proc.communicate()
