@@ -11,8 +11,6 @@ def invoke_deploy(template):
     ]
     with subprocess.Popen(args) as proc:
         proc.communicate()
-        if proc.returncode > 0:
-            raise RuntimeError('*aws cloudformation deploy* failed ({0})'.format(proc.returncode))
 
 def deploy():
     template = helper.load_template()
