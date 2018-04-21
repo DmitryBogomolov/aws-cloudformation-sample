@@ -33,6 +33,9 @@ def get_archive_name(code_uri):
     name = '_'.join(os.path.split(os.path.normpath(os.path.splitext(code_uri)[0])))
     return name + '.zip'
 
+def get_archive_path(archive_name):
+    return os.path.join(PACKAGE_PATH, archive_name)
+
 def is_function_resource(item):
     return item['Type'] == 'AWS::Serverless::Function'
 
@@ -41,3 +44,9 @@ def get_functions(template):
 
 def get_function_name(template, name):
     return template['Name'] + '-' + name
+
+def get_code_uri_list(template):
+    return list(set(resource['Properties']['CodeUri'] for resource in get_functions(template)))
+
+def get_s3_key(template, name):
+    return template['Name'] + '/' + name
