@@ -26,6 +26,8 @@ def setup_subparsers(subparsers):
             args = { 'required': True }
             if parameter.default is not signature.empty:
                 args['required'] = False
+                if isinstance(parameter.default, bool):
+                    args['action'] = 'store_false' if parameter.default else 'store_true'
             subparser.add_argument('--' + parameter.name, **args)
     return functions
 
