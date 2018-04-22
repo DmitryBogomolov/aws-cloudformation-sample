@@ -21,7 +21,7 @@ def save_template(template):
     with open(helper.get_processed_template_path(), 'w') as f:
         yaml.dump(template, f, default_flow_style=False)
 
-def process():
+def run():
     helper.ensure_folder()
     template = helper.load_template()
     update_code_uri(template)

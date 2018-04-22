@@ -2,7 +2,7 @@ from os import path
 import zipfile
 import boto3
 import helper
-from deploy_sources import deploy_sources as call_deploy_sources
+from .deploy_sources import run as call_deploy_sources
 
 def build_archive(code_uri, archive_name):
     archive_path = helper.get_archive_path(archive_name)
@@ -14,7 +14,7 @@ def build_packages(template):
         archive_name = helper.get_archive_name(code_uri)
         build_archive(code_uri, archive_name)
 
-def pack(deploy_sources=False):
+def run(deploy_sources=False):
     helper.ensure_folder()
     template = helper.load_template()
     build_packages(template)
