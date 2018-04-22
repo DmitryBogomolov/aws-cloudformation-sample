@@ -122,7 +122,7 @@ def print_event(event):
     print(FOOTER_TEMPLATE.format(e=event))
     print('')
 
-def logs(name):
+def run(name):
     template = helper.load_template()
     group_name = '/aws/lambda/' + helper.get_function_name(template, name)
     try:

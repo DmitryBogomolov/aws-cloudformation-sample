@@ -4,7 +4,7 @@ import helper
 
 lambda_client = boto3.client('lambda')
 
-def invoke(name, payload=None):
+def run(name, payload=None):
     template = helper.load_template()
     full_name = helper.get_function_name(template, name)
     kwargs = { 'FunctionName': full_name }

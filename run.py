@@ -2,23 +2,12 @@
 
 import sys
 import argparse
-import importlib
 import inspect
-import functools
-
-COMMANDS = ('process', 'pack', 'deploy', 'remove', 'invoke', 'logs', 'deploy_sources', 'remove_sources')
-
-def is_entry_function(name, obj):
-    return inspect.isfunction(obj) and obj.__name__ == name
+from commands import commands
 
 def setup_subparsers(subparsers):
     functions = {}
-    for command in COMMANDS:
-        mod = importlib.import_module(command)
-        members = inspect.getmembers(mod, functools.partial(is_entry_function, command))
-        if len(members) == 0:
-            continue
-        func = members[0][1]
+    for command, func in commands.items():
         functions[command] = func
         signature = inspect.signature(func)
         subparser = subparsers.add_parser(command)

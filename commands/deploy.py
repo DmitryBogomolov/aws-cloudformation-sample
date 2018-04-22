@@ -12,6 +12,6 @@ def invoke_deploy(template):
     with subprocess.Popen(args) as proc:
         proc.communicate()
 
-def deploy():
+def run():
     template = helper.load_template()
     invoke_deploy(template)
