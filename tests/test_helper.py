@@ -8,7 +8,9 @@ class TestHelper(unittest.TestCase):
             ('test.t1', 'test_t1.zip'),
             ('src/test.t2', 'src_test_t2.zip'),
             ('./src/test.t2', 'src_test_t2.zip'),
-            ('src/dir1/dir2/test.t4', 'src_dir1_dir2_test_t4.zip')
+            ('src/dir1/dir2/test.t4', 'src_dir1_dir2_test_t4.zip'),
+            ('src', 'src.zip'),
+            ('src/dir1/dir2', 'src_dir1_dir2.zip')
         ]
 
         for code_uri, expected in cases:

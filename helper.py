@@ -34,7 +34,9 @@ def get_archive_name(code_uri):
     if norm.startswith('..'):
         raise RuntimeError('Not valid "CodeUri": {}'.format(code_uri))
     root, ext = os.path.splitext(norm)
-    return root.replace(os.path.sep, '_') + '_' + ext[1:] + '.zip'
+    root = root.replace(os.path.sep, '_')
+    ext = '_' + ext[1:] if ext else ''
+    return root + ext + '.zip'
 
 def get_processed_template_path():
     return os.path.join(PACKAGE_PATH, TEMPLATE_NAME)
