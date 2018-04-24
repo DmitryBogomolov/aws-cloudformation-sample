@@ -1,18 +1,35 @@
+import os
 from os import path
 import zipfile
+import shutil
 import boto3
 import helper
 from .deploy_sources import run as call_deploy_sources
 
-def build_archive(code_uri, archive_name):
-    archive_path = helper.get_archive_path(archive_name)
-    with zipfile.ZipFile(archive_path, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
-        zf.write(code_uri, arcname=path.basename(code_uri))
+def pack_directory(zf, real_dir, zip_dir):
+    for item in os.listdir(real_dir):
+        path_to_item = path.join(real_dir, item)
+        zip_item = path.join(zip_dir, item)
+        if path.isfile(path_to_item):
+            zf.write(path_to_item, arcname=zip_item)
+        else:
+            pack_directory(zf, path_to_item, zip_item)
+
+def build_archive(code_uri):
+    archive_path = helper.get_archive_path(helper.get_archive_name(code_uri))
+    is_file = path.isfile(code_uri)
+    if is_file and path.splitext(code_uri)[1] == '.zip':
+        shutil.copy2(code_uri, archive_path)
+    else:
+        with zipfile.ZipFile(archive_path, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
+            if is_file:
+                zf.write(code_uri, arcname=path.basename(code_uri))
+            else:
+                pack_directory(zf, code_uri, '')
 
 def build_packages(template):
     for code_uri in helper.get_code_uri_list(template):
-        archive_name = helper.get_archive_name(code_uri)
-        build_archive(code_uri, archive_name)
+        build_archive(code_uri)
 
 def run(deploy_sources=False):
     helper.ensure_folder()

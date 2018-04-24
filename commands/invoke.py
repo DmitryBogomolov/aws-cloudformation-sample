@@ -20,10 +20,12 @@ def run(name, payload=None):
         return 1
     payload = json.loads(response['Payload'].read().decode('utf-8'))
     if response.get('FunctionError'):
-        print(payload['errorType'], payload['errorMessage'])
-        stack_trace = payload['stackTrace']
-        for file_name, line, func, code in stack_trace:
-            print('  {}, {}, in {}'.format(file_name, line, func))
-            print('    ' + code)
+        error_type = payload.get('errorType')
+        print((error_type + ': ' if error_type else '') + payload.get('errorMessage'))
+        stack_trace = payload.get('stackTrace')
+        if stack_trace:
+            for file_name, line, func, code in stack_trace:
+                print('  {}, {}, in {}'.format(file_name, line, func))
+                print('    ' + code)
         return
     print(json.dumps(payload, indent=2))

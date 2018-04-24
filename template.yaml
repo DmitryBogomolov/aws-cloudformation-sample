@@ -81,7 +81,7 @@ Resources:
           FUNCTION: !Ref CalculateFunction
           PAYLOAD: '{ "a": 1.2, "b": 2.3 }'
       Tags:
-        Name: CallCalculateFunction
+        Name: CallCalculate function
 
   InvokeRaiseErrorFunctionRole:
     Type: AWS::IAM::Role
@@ -119,7 +119,7 @@ Resources:
         Variables:
           FUNCTION: !Ref RaiseErrorFunction
       Tags:
-        Name: CallRaiseErrorFunction
+        Name: CallRaiseError function
 
   InvokeDoLongTaskFunctionRole:
     Type: AWS::IAM::Role
@@ -158,4 +158,16 @@ Resources:
           FUNCTION: !Ref DoLongTaskFunction
           PAYLOAD: '{ "a": 1.2, "b": 2.3 }'
       Tags:
-        Name: CallDoLongTaskFunction
+        Name: CallDoLongTask function
+
+  ComplexCalculateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Performs complex calculation with code separeted into modules.
+      FunctionName: complex_calculate
+      Runtime: python3.6
+      Handler: index.handler
+      CodeUri: ./sources/complex_calculate
+      Timeout: 15
+      Tags:
+        Name: ComplexCalculate function
