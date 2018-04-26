@@ -5,7 +5,7 @@ import helper
 def invoke_deploy(template):
     args = [
         'aws', 'cloudformation', 'deploy',
-        '--stack-name', template['Name'],
+        '--stack-name', template['Project'],
         '--capabilities', 'CAPABILITY_IAM',
         '--template-file', helper.get_processed_template_path()
     ]

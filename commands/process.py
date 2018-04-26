@@ -2,7 +2,7 @@ import yaml
 import helper
 
 def update_code_uri(template):
-    s3_base_path = 's3://{0}/{1}'.format(template['Bucket'], template['Name'])
+    s3_base_path = 's3://{0}/{1}'.format(template['Bucket'], template['Project'])
     for resource in helper.get_functions(template):
         code_uri = resource['Properties']['CodeUri']
         archive_name = helper.get_archive_name(code_uri)
@@ -14,7 +14,7 @@ def update_function_names(template):
         resource['Properties']['FunctionName'] = helper.get_function_name(template, name)
 
 def delete_custom_fields(template):
-    template.pop('Name')
+    template.pop('Project')
     template.pop('Bucket')
 
 def save_template(template):

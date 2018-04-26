@@ -6,6 +6,6 @@ cf = boto3.client('cloudformation')
 
 def run(remove_sources=False):
     template = helper.load_template()
-    cf.delete_stack(StackName=template['Name'])
+    cf.delete_stack(StackName=template['Project'])
     if remove_sources:
         call_remove_sources()
