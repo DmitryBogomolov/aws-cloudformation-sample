@@ -1,4 +1,4 @@
-Name: mytestapp1
+Project: mytestapp1
 Bucket: my-aws-buckets
 
 AWSTemplateFormatVersion: 2010-09-09
