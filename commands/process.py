@@ -1,6 +1,6 @@
-import yaml
 import helper
 from utils.logger import log
+from utils.yaml import save
 
 def update_code_uri(template):
     s3_base_path = 's3://{0}/{1}/'.format(template['Bucket'], template['Project'])
@@ -20,8 +20,7 @@ def delete_custom_fields(template):
 
 def save_template(template):
     file_path = helper.get_processed_template_path()
-    with open(file_path, 'w') as f:
-        yaml.dump(template, f, default_flow_style=False)
+    save(file_path, template);
     log('Saved to {}', file_path)
 
 def run():

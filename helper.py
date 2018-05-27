@@ -1,21 +1,8 @@
 import os
-import yaml
-from collections import namedtuple
+from utils.yaml import load
 
 PACKAGE_PATH = os.path.abspath('.package')
 TEMPLATE_NAME = 'template.yaml'
-
-Custom = namedtuple('Custom', ('tag', 'value'))
-
-def custom_constructor(loader, node):
-    return Custom(node.tag, node.value)
-
-def custom_representer(dumper, data):
-    return dumper.represent_scalar(data.tag, data.value)
-
-for tag in ('!GetAtt', '!Ref'):
-    yaml.add_constructor(tag, custom_constructor)
-yaml.add_representer(Custom, custom_representer)
 
 def ensure_folder():
     os.makedirs(PACKAGE_PATH, exist_ok=True)
@@ -24,8 +11,7 @@ def get_template_path():
     return os.path.abspath(TEMPLATE_NAME)
 
 def load_template():
-    with open(get_template_path(), 'r') as f:
-        template = yaml.load(f)
+    template = load(get_template_path())
     if not template.get('Project'):
         raise RuntimeError('"Project" field is absent.')
     if not template.get('Bucket'):
