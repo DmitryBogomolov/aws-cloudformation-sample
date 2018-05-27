@@ -1,4 +1,5 @@
 import boto3
+import operator
 import helper
 from utils.logger import log
 
@@ -8,12 +9,10 @@ def run():
     log('Removing sources')
     template = helper.load_template()
     objects = []
-    keys = []
-    for code_uri in helper.get_code_uri_list(template):
-        archive_name = helper.get_archive_name(code_uri)
-        key = helper.get_s3_key(template, archive_name)
-        objects.append({ 'Key': key })
-        keys.append(key)
+    bucket = template['Bucket']
+    res = s3_client.list_objects(Bucket=bucket, Prefix=template['Project'] + '/')
+    keys = list(map(operator.itemgetter('Key'), res['Contents']))
+    objects = [{ 'Key': key } for key in keys]
     s3_client.delete_objects(Bucket=template['Bucket'], Delete={ 'Objects': objects })
     for key in keys:
         log(' - {}', key)
