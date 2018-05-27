@@ -5,6 +5,10 @@ import os
 import helper
 
 class TestHelper(unittest.TestCase):
+    def test_get_template_path(self):
+        self.assertEqual(helper.get_template_path(),
+            os.path.realpath('template.yaml'))
+
     def test_get_processed_template_path(self):
         self.assertEqual(helper.get_processed_template_path(),
             os.path.realpath('.package/template.yaml'))

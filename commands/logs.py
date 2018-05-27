@@ -5,6 +5,7 @@ import concurrent.futures
 import operator
 import boto3
 import helper
+from utils.logger import log
 
 logs_client = boto3.client('logs')
 
@@ -97,7 +98,7 @@ def get_stream_events(function_name, group_name, stream_name):
             entry, current_events = extract_entry(current_events, basis)
             entries.append(entry)
         except Exception as e:
-            print(e)
+            log(e)
     return stream_name, entries
 
 def load_all_events(function_name, group_name, stream_names):
@@ -116,19 +117,20 @@ def load_all_events(function_name, group_name, stream_names):
 
 def print_event(event):
     timestamp = datetime.fromtimestamp(event.start / 1E3).replace(microsecond=0).isoformat()
-    print(HEADER_TEMPLATE.format(e=event, t=timestamp))
+    log(HEADER_TEMPLATE.format(e=event, t=timestamp))
     for item in event.items:
-        print(ITEM_TEMPLATE.format(offset=item.timestamp - event.start, message=item.message.strip()))
-    print(FOOTER_TEMPLATE.format(e=event))
-    print('')
+        log(ITEM_TEMPLATE.format(offset=item.timestamp - event.start, message=item.message.strip()))
+    log(FOOTER_TEMPLATE.format(e=event))
+    log('')
 
 def run(name):
+    log('Getting logs')
     template = helper.load_template()
     group_name = '/aws/lambda/' + helper.get_function_name(template, name)
     try:
         streams = logs_client.describe_log_streams(logGroupName=group_name)['logStreams']
     except logs_client.exceptions.ResourceNotFoundException:
-        print('Log group *{}* is not found.'.format(group_name))
+        log('Log group *{}* is not found.', group_name)
         return 1
     stream_names = list(map(get_stream_name, streams))
     events = load_all_events(name, group_name, stream_names)

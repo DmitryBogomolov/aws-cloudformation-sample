@@ -1,9 +1,11 @@
 import boto3
 import helper
+from utils.logger import log
 
 s3_client = boto3.client('s3')
 
 def run():
+    log('Removing sources')
     template = helper.load_template()
     objects = []
     keys = []
@@ -14,4 +16,4 @@ def run():
         keys.append(key)
     s3_client.delete_objects(Bucket=template['Bucket'], Delete={ 'Objects': objects })
     for key in keys:
-        print('  ', key)
+        log(' - {}', key)

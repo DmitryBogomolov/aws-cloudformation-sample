@@ -1,5 +1,6 @@
 import subprocess
 import helper
+from utils.logger import log
 
 # There is no *boto3.client('cloudformation').deploy* function - have to use *subprocess*.
 def invoke_deploy(template):
@@ -13,5 +14,6 @@ def invoke_deploy(template):
         proc.communicate()
 
 def run():
+    log('Deploying stack')
     template = helper.load_template()
     invoke_deploy(template)

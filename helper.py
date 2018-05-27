@@ -20,8 +20,11 @@ yaml.add_representer(Custom, custom_representer)
 def ensure_folder():
     os.makedirs(PACKAGE_PATH, exist_ok=True)
 
+def get_template_path():
+    return os.path.abspath(TEMPLATE_NAME)
+
 def load_template():
-    with open(os.path.abspath(TEMPLATE_NAME), 'r') as f:
+    with open(get_template_path(), 'r') as f:
         template = yaml.load(f)
     if not template.get('Project'):
         raise RuntimeError('"Project" field is absent.')

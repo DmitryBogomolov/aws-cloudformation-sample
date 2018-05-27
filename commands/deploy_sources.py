@@ -1,10 +1,12 @@
 from os import path
 import boto3
 import helper
+from utils.logger import log
 
 s3_client = boto3.client('s3')
 
 def run():
+    log('Deploying sources')
     template = helper.load_template()
     keys = []
     for code_uri in helper.get_code_uri_list(template):
@@ -12,5 +14,4 @@ def run():
         key = helper.get_s3_key(template, archive_name)
         keys.append(key)
         s3_client.upload_file(helper.get_archive_path(archive_name), template['Bucket'], key)
-    for key in keys:
-        print('  ', key)
+        log(' - {}', key)
