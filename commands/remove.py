@@ -1,5 +1,5 @@
 import boto3
-import helper
+from utils import helper
 from utils.logger import log
 from .remove_sources import run as call_remove_sources
 

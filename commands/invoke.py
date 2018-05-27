@@ -1,6 +1,6 @@
 import boto3
 import json
-import helper
+from utils import helper
 from utils.logger import log
 
 lambda_client = boto3.client('lambda')

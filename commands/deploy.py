@@ -1,5 +1,5 @@
 import subprocess
-import helper
+from utils import helper
 from utils.logger import log
 
 # There is no *boto3.client('cloudformation').deploy* function - have to use *subprocess*.

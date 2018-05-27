@@ -4,7 +4,7 @@ from collections import namedtuple
 import concurrent.futures
 import operator
 import boto3
-import helper
+from utils import helper
 from utils.logger import log
 
 logs_client = boto3.client('logs')

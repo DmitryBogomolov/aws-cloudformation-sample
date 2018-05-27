@@ -1,6 +1,6 @@
 import boto3
 import operator
-import helper
+from utils import helper
 from utils.logger import log
 
 s3_client = boto3.client('s3')

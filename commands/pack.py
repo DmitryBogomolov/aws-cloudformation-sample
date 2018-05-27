@@ -3,7 +3,7 @@ from os import path
 import zipfile
 import shutil
 import boto3
-import helper
+from utils import helper
 from utils.logger import log
 from .deploy_sources import run as call_deploy_sources
 

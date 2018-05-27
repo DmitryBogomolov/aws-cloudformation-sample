@@ -2,7 +2,7 @@
 
 import unittest
 import os
-import helper
+from utils import helper
 
 class TestHelper(unittest.TestCase):
     def test_get_template_path(self):
