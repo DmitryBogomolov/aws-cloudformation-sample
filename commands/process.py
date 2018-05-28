@@ -17,7 +17,7 @@ def update_function_names(template):
 
 def delete_custom_fields(template):
     for field in ['Project', 'Bucket', 'Profile', 'Region']:
-        template.pop(field)
+        template.pop(field, None)
 
 def save_template(template):
     file_path = helper.get_processed_template_path()

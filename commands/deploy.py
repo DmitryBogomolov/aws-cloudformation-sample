@@ -1,6 +1,7 @@
 import boto3
 from utils import helper
-from utils.client import client, exceptions
+from utils.client import client
+from utils.cf_waiter import wait, WaiterError
 from utils.template import template
 from utils.logger import log
 
@@ -27,11 +28,7 @@ def create_stack(stack_name):
             TemplateBody=TEMPLATE_BODY.format(project=stack_name)
         )
         log('creating stack')
-        waiter = cf.get_waiter('stack_create_complete')
-        waiter.wait(
-            StackName=stack_name,
-            WaiterConfig={ 'Delay': 5 }
-        )
+        wait('stack_create_complete', stack_name, 5)
         log('stack is created')
     except cf.exceptions.AlreadyExistsException:
         log('stack already exists')
@@ -46,13 +43,8 @@ def update_stack(stack_name, template_body):
     )
     change_id = ret['Id']
     try:
-        waiter = cf.get_waiter('change_set_create_complete')
-        waiter.wait(
-            StackName=stack_name,
-            ChangeSetName=change_id,
-            WaiterConfig={ 'Delay': 5 }
-        )
-    except exceptions.WaiterError as err:
+        wait('change_set_create_complete', stack_name, 5, ChangeSetName=change_id)
+    except WaiterError as err:
         if len(err.last_response['Changes']) == 0:
             log('no changes')
             return
@@ -64,13 +56,9 @@ def update_stack(stack_name, template_body):
         ChangeSetName=change_id
     )
     try:
-        waiter = cf.get_waiter('stack_update_complete')
-        waiter.wait(
-            StackName=stack_name,
-            WaiterConfig={ 'Delay': 15 }
-        )
+        wait('stack_update_complete', stack_name, 15)
         log('stack is updated')
-    except exceptions.WaiterError as err:
+    except WaiterError as err:
         log('stack is not updated')
         raise RuntimeError(err.last_response)
 
