@@ -1,5 +1,5 @@
 from utils import helper
-from utils.template import template, CUSTOM_FIELDS
+from utils.template import template
 from utils.logger import log
 from utils.yaml import save
 
@@ -16,7 +16,7 @@ def update_function_names(template):
         resource['Properties']['FunctionName'] = helper.get_function_name(template, name)
 
 def delete_custom_fields(template):
-    for field in CUSTOM_FIELDS:
+    for field in ['Project', 'Bucket', 'Profile', 'Region']:
         template.pop(field)
 
 def save_template(template):
