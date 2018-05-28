@@ -63,12 +63,16 @@ def update_stack(stack_name, template_body):
         StackName=stack_name,
         ChangeSetName=change_id
     )
-    waiter = cf.get_waiter('stack_update_complete')
-    waiter.wait(
-        StackName=stack_name,
-        WaiterConfig={ 'Delay': 15 }
-    )
-    log('stack is updated')
+    try:
+        waiter = cf.get_waiter('stack_update_complete')
+        waiter.wait(
+            StackName=stack_name,
+            WaiterConfig={ 'Delay': 15 }
+        )
+        log('stack is updated')
+    except exceptions.WaiterError as err:
+        log('stack is not updated')
+        raise RuntimeError(err.last_response)
 
 def run():
     log('Deploying stack')
