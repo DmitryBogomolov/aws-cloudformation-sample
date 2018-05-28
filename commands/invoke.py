@@ -1,7 +1,7 @@
 import boto3
 import json
 from utils import helper
-from utils.logger import log
+from utils.logger import log, logError
 
 lambda_client = boto3.client('lambda')
 
@@ -18,7 +18,7 @@ def run(name, payload=None):
         log('Function *{}* is not found.', full_name)
         return 1
     except Exception as e:
-        log(e)
+        logError(e)
         return 1
     payload = json.loads(response['Payload'].read().decode('utf-8'))
     if response.get('FunctionError'):

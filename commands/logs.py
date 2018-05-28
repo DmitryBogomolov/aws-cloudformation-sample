@@ -5,7 +5,7 @@ import concurrent.futures
 import operator
 import boto3
 from utils import helper
-from utils.logger import log
+from utils.logger import log, logError
 
 logs_client = boto3.client('logs')
 
@@ -98,7 +98,7 @@ def get_stream_events(function_name, group_name, stream_name):
             entry, current_events = extract_entry(current_events, basis)
             entries.append(entry)
         except Exception as e:
-            log(e)
+            logError(e)
     return stream_name, entries
 
 def load_all_events(function_name, group_name, stream_names):
