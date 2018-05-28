@@ -2,8 +2,8 @@ import os
 from os import path
 import zipfile
 import shutil
-import boto3
 from utils import helper
+from utils.template import template
 from utils.logger import log
 from .deploy_sources import run as call_deploy_sources
 
@@ -41,7 +41,6 @@ def build_packages(template):
 def run(deploy_sources=False):
     log('Packing sources')
     helper.ensure_folder()
-    template = helper.load_template()
     build_packages(template)
     if deploy_sources:
         call_deploy_sources()

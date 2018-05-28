@@ -1,9 +1,10 @@
-import boto3
 from utils import helper
+from utils.client import client
+from utils.template import template
 from utils.logger import log
 from .remove_sources import run as call_remove_sources
 
-cf = boto3.client('cloudformation')
+cf = client('cloudformation')
 
 def delete_stack(stack_name):
     cf.delete_stack(StackName=stack_name)
@@ -15,7 +16,6 @@ def delete_stack(stack_name):
 
 def run(remove_sources=False):
     log('Removing stack')
-    template = helper.load_template()
     delete_stack(template['Project'])
     log('Done')
     if remove_sources:

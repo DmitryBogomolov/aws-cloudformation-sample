@@ -1,4 +1,5 @@
 from utils import helper
+from utils.template import template, CUSTOM_FIELDS
 from utils.logger import log
 from utils.yaml import save
 
@@ -15,8 +16,8 @@ def update_function_names(template):
         resource['Properties']['FunctionName'] = helper.get_function_name(template, name)
 
 def delete_custom_fields(template):
-    template.pop('Project')
-    template.pop('Bucket')
+    for field in CUSTOM_FIELDS:
+        template.pop(field)
 
 def save_template(template):
     file_path = helper.get_processed_template_path()
@@ -26,7 +27,6 @@ def save_template(template):
 def run():
     log('Processing {}', helper.get_template_path())
     helper.ensure_folder()
-    template = helper.load_template()
     update_code_uri(template)
     update_function_names(template)
     delete_custom_fields(template)

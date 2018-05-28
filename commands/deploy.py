@@ -1,8 +1,10 @@
 import boto3
 from utils import helper
+from utils.client import client, exceptions
+from utils.template import template
 from utils.logger import log
 
-cf = boto3.client('cloudformation')
+cf = client('cloudformation')
 
 TEMPLATE_BODY = '''
 AWSTemplateFormatVersion: 2010-09-09
@@ -50,7 +52,7 @@ def update_stack(stack_name, template_body):
             ChangeSetName=change_id,
             WaiterConfig={ 'Delay': 5 }
         )
-    except boto3.exceptions.botocore.exceptions.WaiterError as err:
+    except exceptions.WaiterError as err:
         if len(err.last_response['Changes']) == 0:
             log('no changes')
             return
@@ -70,7 +72,6 @@ def update_stack(stack_name, template_body):
 
 def run():
     log('Deploying stack')
-    template = helper.load_template()
     stack_name = template['Project']
     template_body = get_template_body()
     cf.validate_template(TemplateBody=template_body)

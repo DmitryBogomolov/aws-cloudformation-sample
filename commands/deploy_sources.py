@@ -1,13 +1,13 @@
 from os import path
-import boto3
 from utils import helper
+from utils.client import client
+from utils.template import template
 from utils.logger import log
 
-s3_client = boto3.client('s3')
+s3_client = client('s3')
 
 def run():
     log('Deploying sources')
-    template = helper.load_template()
     keys = []
     for code_uri in helper.get_code_uri_list(template):
         archive_name = helper.get_archive_name(code_uri)

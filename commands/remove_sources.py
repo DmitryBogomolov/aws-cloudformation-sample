@@ -1,13 +1,13 @@
-import boto3
 import operator
 from utils import helper
+from utils.client import client
+from utils.template import template
 from utils.logger import log
 
-s3_client = boto3.client('s3')
+s3_client = client('s3')
 
 def run():
     log('Removing sources')
-    template = helper.load_template()
     objects = []
     bucket = template['Bucket']
     res = s3_client.list_objects(Bucket=bucket, Prefix=template['Project'] + '/')

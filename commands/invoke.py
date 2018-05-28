@@ -1,13 +1,13 @@
-import boto3
 import json
 from utils import helper
+from utils.client import client
+from utils.template import template
 from utils.logger import log, logError
 
-lambda_client = boto3.client('lambda')
+lambda_client = client('lambda')
 
 def run(name, payload=None):
     log('Invoking function')
-    template = helper.load_template()
     full_name = helper.get_function_name(template, name)
     kwargs = { 'FunctionName': full_name }
     if payload:

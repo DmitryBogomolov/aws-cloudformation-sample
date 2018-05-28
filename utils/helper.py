@@ -10,14 +10,6 @@ def ensure_folder():
 def get_template_path():
     return os.path.abspath(TEMPLATE_NAME)
 
-def load_template():
-    template = load(get_template_path())
-    if not template.get('Project'):
-        raise RuntimeError('"Project" field is absent.')
-    if not template.get('Bucket'):
-        raise RuntimeError('"Bucket" field is absent.')
-    return template
-
 def get_archive_name(code_uri):
     norm = os.path.relpath(os.path.normcase(os.path.normpath(code_uri)))
     if norm.startswith('..'):

@@ -3,11 +3,12 @@ from datetime import datetime
 from collections import namedtuple
 import concurrent.futures
 import operator
-import boto3
 from utils import helper
+from utils.client import client
+from utils.template import template
 from utils.logger import log, logError
 
-logs_client = boto3.client('logs')
+logs_client = client('logs')
 
 get_stream_name = operator.itemgetter('logStreamName')
 
@@ -125,7 +126,6 @@ def print_event(event):
 
 def run(name):
     log('Getting logs')
-    template = helper.load_template()
     group_name = '/aws/lambda/' + helper.get_function_name(template, name)
     try:
         streams = logs_client.describe_log_streams(logGroupName=group_name)['logStreams']
