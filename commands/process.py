@@ -12,11 +12,13 @@ def create_template(pattern):
     return template
 
 def create_functions(template, pattern):
+    s3_base_path = 's3://{0}/{1}/'.format(pattern.bucket, pattern.project)
     for function in pattern.functions:
         resource = {
             'Type': 'AWS::Serverless::Function',
             'Properties': function.Properties
         }
+        s3_path = s3_base_path + helper.get_archive_name(function.code_uri)
         resource['Properties'].update(
             FunctionName=function.full_name,
             Description=function.description,
@@ -24,7 +26,7 @@ def create_functions(template, pattern):
             Timeout=function.timeout,
             Tags=function.tags,
             Handler=function.handler,
-            CodeUri=function.code_uri
+            CodeUri=s3_path
         )
         template['Resources'][function.name] = resource
 

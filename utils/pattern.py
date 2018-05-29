@@ -29,7 +29,6 @@ def set_basic_fields(pattern, source):
     pattern.function_timeout = source.get('function_timeout')
     pattern.function_runtime = source.get('function_runtime')
     pattern.Resources = source.get('Resources')
-    pattern.s3_base_path = 's3://{0}/{1}/'.format(pattern.bucket, pattern.project)
 
 def check_required_fields(source):
     absent = []
