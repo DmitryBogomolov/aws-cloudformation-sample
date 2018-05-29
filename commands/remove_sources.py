@@ -1,7 +1,7 @@
 import operator
 from utils import helper
 from utils.client import client
-from utils.template import template
+from utils.pattern import pattern
 from utils.logger import log
 
 s3_client = client('s3')
@@ -9,10 +9,10 @@ s3_client = client('s3')
 def run():
     log('Removing sources')
     objects = []
-    bucket = template['Bucket']
-    res = s3_client.list_objects(Bucket=bucket, Prefix=template['Project'] + '/')
+    bucket = pattern.bucket
+    res = s3_client.list_objects(Bucket=bucket, Prefix=pattern.project + '/')
     keys = list(map(operator.itemgetter('Key'), res['Contents']))
     objects = [{ 'Key': key } for key in keys]
-    s3_client.delete_objects(Bucket=template['Bucket'], Delete={ 'Objects': objects })
+    s3_client.delete_objects(Bucket=pattern.bucket, Delete={ 'Objects': objects })
     for key in keys:
         log(' - {}', key)

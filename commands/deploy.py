@@ -2,7 +2,7 @@ import boto3
 from utils import helper
 from utils.client import client
 from utils.cf_waiter import wait, WaiterError
-from utils.template import template
+from utils.pattern import pattern
 from utils.logger import log
 
 cf = client('cloudformation')
@@ -64,7 +64,7 @@ def update_stack(stack_name, template_body):
 
 def run():
     log('Deploying stack')
-    stack_name = template['Project']
+    stack_name = pattern.project
     template_body = get_template_body()
     cf.validate_template(TemplateBody=template_body)
     create_stack(stack_name)

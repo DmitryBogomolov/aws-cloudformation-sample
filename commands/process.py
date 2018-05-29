@@ -1,23 +1,32 @@
 from utils import helper
-from utils.template import template
+from utils.pattern import pattern
 from utils.logger import log
 from utils.yaml import save
 
-def update_code_uri(template):
-    s3_base_path = 's3://{0}/{1}/'.format(template['Bucket'], template['Project'])
-    for resource in helper.get_functions(template):
-        code_uri = resource['Properties']['CodeUri']
-        archive_name = helper.get_archive_name(code_uri)
-        resource['Properties']['CodeUri'] = s3_base_path + archive_name
+def create_template(pattern):
+    template = {}
+    template['AWSTemplateFormatVersion'] = '2010-09-09'
+    template['Transform'] = 'AWS::Serverless-2016-10-31'
+    template['Description'] = pattern.description
+    template['Resources'] = dict(pattern.Resources)
+    return template
 
-def update_function_names(template):
-    for resource in helper.get_functions(template):
-        name = resource['Properties']['FunctionName']
-        resource['Properties']['FunctionName'] = helper.get_function_name(template, name)
-
-def delete_custom_fields(template):
-    for field in ['Project', 'Bucket', 'Profile', 'Region']:
-        template.pop(field, None)
+def create_functions(template, pattern):
+    for function in pattern.functions:
+        resource = {
+            'Type': 'AWS::Serverless::Function',
+            'Properties': function.Properties
+        }
+        resource['Properties'].update(
+            FunctionName=function.full_name,
+            Description=function.description,
+            Runtime=function.runtime,
+            Timeout=function.timeout,
+            Tags=function.tags,
+            Handler=function.handler,
+            CodeUri=function.code_uri
+        )
+        template['Resources'][function.name] = resource
 
 def save_template(template):
     file_path = helper.get_processed_template_path()
@@ -25,9 +34,8 @@ def save_template(template):
     log('Saved to {}', file_path)
 
 def run():
-    log('Processing {}', helper.get_template_path())
+    log('Processing {}', helper.get_pattern_path())
     helper.ensure_folder()
-    update_code_uri(template)
-    update_function_names(template)
-    delete_custom_fields(template)
+    template = create_template(pattern)
+    create_functions(template, pattern)
     save_template(template)

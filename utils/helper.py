@@ -2,13 +2,14 @@ import os
 from utils.yaml import load
 
 PACKAGE_PATH = os.path.abspath('.package')
+PATTERN_NAME = 'template.yaml'
 TEMPLATE_NAME = 'template.yaml'
 
 def ensure_folder():
     os.makedirs(PACKAGE_PATH, exist_ok=True)
 
-def get_template_path():
-    return os.path.abspath(TEMPLATE_NAME)
+def get_pattern_path():
+    return os.path.abspath(PATTERN_NAME)
 
 def get_archive_name(code_uri):
     norm = os.path.relpath(os.path.normcase(os.path.normpath(code_uri)))
@@ -25,17 +26,9 @@ def get_processed_template_path():
 def get_archive_path(archive_name):
     return os.path.join(PACKAGE_PATH, archive_name)
 
-def is_function_resource(item):
-    return item['Type'] == 'AWS::Serverless::Function'
+def get_function_name(pattern, name):
+    return pattern.project + '-' + name
 
-def get_functions(template):
-    return list(filter(is_function_resource, template['Resources'].values()))
+def get_code_uri_list(pattern):
+    return sorted(list(set(function.code_uri for function in pattern.functions)))
 
-def get_function_name(template, name):
-    return template['Project'] + '-' + name
-
-def get_code_uri_list(template):
-    return list(set(resource['Properties']['CodeUri'] for resource in get_functions(template)))
-
-def get_s3_key(template, name):
-    return template['Project'] + '/' + name
