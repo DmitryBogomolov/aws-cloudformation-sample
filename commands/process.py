@@ -28,7 +28,12 @@ def create_functions(template, pattern):
             Handler=function.handler,
             CodeUri=s3_path
         )
-        template['Resources'][function.name] = resource
+        if function.environment:
+            env = resource['Properties'].get('Environment')
+            if not env:
+                env = { 'Variables': {} }
+                resource['Properties']['Environment'] = env
+            env['Variables'].update(function.environment)
 
 def save_template(template):
     file_path = helper.get_processed_template_path()

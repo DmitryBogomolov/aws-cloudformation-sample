@@ -18,6 +18,7 @@ class Function(object):
         self.tags = take_dict(source, 'tags')
         self.timeout = source.get('timeout') or root.function_timeout
         self.runtime = source.get('runtime') or root.function_runtime
+        self.environment = take_dict(source, 'environment')
         self.Properties = take_dict(source, 'Properties')
 
 def set_basic_fields(pattern, source):
