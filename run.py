@@ -4,7 +4,6 @@ import sys
 import argparse
 import inspect
 from commands import commands
-from utils.logger import logError
 
 def setup_subparsers(subparsers):
     functions = {}
@@ -32,11 +31,7 @@ def main():
         parser.print_help()
         return 0
 
-    try:
-        return functions[command](**args)
-    except Exception as err:
-        logError(err)
-        return 1
+    return functions[command](**args)
 
 if __name__ == '__main__':
     sys.exit(main())

@@ -1,173 +1,107 @@
-Project: mytestapp1
-Bucket: my-aws-buckets
+project: mytestapp1
+bucket: my-aws-buckets
 
-AWSTemplateFormatVersion: 2010-09-09
-Transform: AWS::Serverless-2016-10-31
+description: The sample.
 
-Description:
-  The sample.
+function_runtime: python3.6
+function_timeout: 5
 
-Resources:
-  CalculateFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Description: Does some test calculation.
-      FunctionName: calculate
-      Runtime: python3.6
-      Handler: calculate.handler
-      CodeUri: ./sources/calculate.py
-      Timeout: 5
-      Tags:
-        Name: Calculate function
+resources:
+  Calculate:
+    type: function
+    description: Performs test calculation.
+    handler: calculate.handler
+    code_uri: ./sources/calculate.py
+    tags:
+      Name: Calculate function
 
-  RaiseErrorFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Description: Raises error.
-      FunctionName: raise_error
-      Runtime: python3.6
-      Handler: raise_error.handler
-      CodeUri: ./sources/raise_error.py
-      Timeout: 5
-      Tags:
-        Name: RaiseError function
+  RaiseError:
+    type: function
+    description: Raises error.
+    handler: raise_error.handler
+    code_uri: ./sources/raise_error.py
+    tags:
+      Name: RaiseError function
 
-  DoLongTaskFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Description: Does "long running" task.
-      FunctionName: do_long_task
-      Runtime: python3.6
-      Handler: do_long_task.handler
-      CodeUri: ./sources/do_long_task.py
-      Timeout: 15
-      Tags:
-        Name: DoLongTask function
+  DoLongTask:
+    type: function
+    description: Perfoms long running task.
+    handler: do_long_task.handler
+    code_uri: ./sources/do_long_task.py
+    timeout: 15
+    tags:
+      Name: DoLongTask function
 
-  InvokeCalculateFunctionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
+  InvokeCalculateRole:
+    type: lambda-role
+    policies:
+      - name: invoke_calculate_policy
+        statement:
           - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-      Path: /
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      Policies:
-        - PolicyName: InvokeCalculateFunctionPolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action: lambda:InvokeFunction
-                Resource: !GetAtt CalculateFunction.Arn
+            Action: lambda:InvokeFunction
+            Resource: !GetAtt Calculate.Arn
 
-  CallCalculateFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Description: Calls 'Calculate' function.
-      FunctionName: call_calculate
-      Runtime: python3.6
-      Handler: call_function.handler
-      CodeUri: ./sources/call_function.py
-      Role: !GetAtt InvokeCalculateFunctionRole.Arn
-      Timeout: 10
-      Environment:
-        Variables:
-          FUNCTION: !Ref CalculateFunction
-          PAYLOAD: '{ "a": 1.2, "b": 2.3 }'
-      Tags:
-        Name: CallCalculate function
+  CallCalculate:
+    type: function
+    description: Calls 'Calculate' function.
+    handler: call_function.handler
+    code_uri: ./sources/call_function.py
+    role: !GetAtt InvokeCalculateRole.Arn
+    timeout: 10
+    environment:
+      FUNCTION: !Ref Calculate
+      PAYLOAD: '{ "a": 1.2, "b": 2.3 }'
+    tags:
+      Name: CallCalculate function
 
-  InvokeRaiseErrorFunctionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
+  InvokeRaiseErrorRole:
+    type: lambda-role
+    policies:
+      - name: InvokeRaiseErrorPolicy
+        statement:
           - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-      Path: /
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      Policies:
-        - PolicyName: InvokeRaiseErrorFunctionPolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action: lambda:InvokeFunction
-                Resource: !GetAtt RaiseErrorFunction.Arn
+            Action: lambda:InvokeFunction
+            Resource: !GetAtt RaiseError.Arn
 
-  CallRaiseErrorFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Description: Calls 'RaiseError' function.
-      FunctionName: call_raise_error
-      Runtime: python3.6
-      Handler: call_function.handler
-      CodeUri: ./sources/call_function.py
-      Role: !GetAtt InvokeRaiseErrorFunctionRole.Arn
-      Timeout: 10
-      Environment:
-        Variables:
-          FUNCTION: !Ref RaiseErrorFunction
-      Tags:
-        Name: CallRaiseError function
+  CallRaiseError:
+    type: function
+    description: Calls 'RaiseError' function.
+    handler: call_function.handler
+    code_uri: ./sources/call_function.py
+    role: !GetAtt InvokeRaiseErrorRole.Arn
+    timeout: 10
+    environment:
+      FUNCTION: !Ref RaiseError
+    tags:
+      Name: CallRaiseError function
 
-  InvokeDoLongTaskFunctionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
+  InvokeDoLongTaskRole:
+    type: lambda-role
+    policies:
+      - name: InvokeDoLongTaskPolicy
+        statement:
           - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-      Path: /
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      Policies:
-        - PolicyName: InvokeDoLongTaskFunctionPolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action: lambda:InvokeFunction
-                Resource: !GetAtt DoLongTaskFunction.Arn
+            Action: lambda:InvokeFunction
+            Resource: !GetAtt DoLongTask.Arn
 
-  CallDoLongTaskFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Description: Calls 'DoLongTask' function.
-      FunctionName: call_do_long_task
-      Runtime: python3.6
-      Handler: call_function.handler
-      CodeUri: ./sources/call_function.py
-      Role: !GetAtt InvokeDoLongTaskFunctionRole.Arn
-      Timeout: 30
-      Environment:
-        Variables:
-          FUNCTION: !Ref DoLongTaskFunction
-          PAYLOAD: '{ "a": 1.2, "b": 2.3 }'
-      Tags:
-        Name: CallDoLongTask function
+  CallDoLongTask:
+    type: function
+    description: Calls 'DoLongTask' function.
+    handler: call_function.handler
+    code_uri: ./sources/call_function.py
+    role: !GetAtt InvokeDoLongTaskRole.Arn
+    timeout: 30
+    environment:
+      FUNCTION: !Ref DoLongTask
+      PAYLOAD: '{ "a": 1.2, "b": 2.3 }'
+    tags:
+      Name: CallDoLongTask function
 
-  ComplexCalculateFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Description: Performs complex calculation with code separeted into modules.
-      FunctionName: complex_calculate
-      Runtime: python3.6
-      Handler: index.handler
-      CodeUri: ./sources/complex_calculate
-      Timeout: 15
-      Tags:
-        Name: ComplexCalculate function
+  ComplexCalculate:
+    type: function
+    description: Performs complex calculation with code separeted into modules.
+    handler: index.handler
+    code_uri: ./sources/complex_calculate
+    timeout: 15
+    tags:
+      Name: ComplexCalculate function
