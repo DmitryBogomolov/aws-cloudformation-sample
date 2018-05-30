@@ -2,9 +2,13 @@
 
 import unittest
 import os
+
+from utils import yaml
+yaml.load = lambda _: { 'project': 'test', 'bucket': 'test' }
+
 from utils import helper
 # TODO: utils.pattern.py is imported - find a way to stub it.
-from commands import process, deploy_sources
+from commands import deploy_sources
 
 class Tester(object):
     def __init__(self, **kwargs):
@@ -62,19 +66,6 @@ class TestDeploySources(unittest.TestCase):
     def test_get_s3_key(self):
         pattern = Tester(project='proj1')
         self.assertEqual(deploy_sources.get_s3_key(pattern, 'obj1'), 'proj1/obj1')
-
-class TestProcess(unittest.TestCase):
-    def test_create_template(self):
-        pattern = Tester(
-            description='Test',
-            Resources={ 'Tag': 'resources' }
-        )
-        self.assertEqual(process.create_template(pattern), {
-            'AWSTemplateFormatVersion': '2010-09-09',
-            'Transform': 'AWS::Serverless-2016-10-31',
-            'Description': 'Test',
-            'Resources': { 'Tag': 'resources' }
-        })
 
 if __name__ == '__main__':
     unittest.main()
