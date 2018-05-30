@@ -66,6 +66,7 @@ DependsOn: []
         self.runtime = source.get('runtime') or root.function_runtime
         self.role = source.get('role')
         self.environment = take_dict(source, 'environment')
+        self.depends_on = source.get('depends_on') or []
 
         self.log_group = LogGroup(name, root)
 
@@ -85,6 +86,7 @@ DependsOn: []
         )
         properties['Environment']['Variables'].update(self.environment)
         resource['DependsOn'].append(self.log_group.name)
+        resource['DependsOn'].extend(self.depends_on)
 
 
 class Policy(Base):

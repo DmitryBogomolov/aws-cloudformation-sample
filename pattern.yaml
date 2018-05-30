@@ -53,6 +53,8 @@ resources:
       PAYLOAD: '{ "a": 1.2, "b": 2.3 }'
     tags:
       Name: CallCalculate function
+    depends_on:
+      - InvokeCalculateRole
 
   InvokeRaiseErrorRole:
     type: lambda-role
@@ -74,6 +76,8 @@ resources:
       FUNCTION: !Ref RaiseError
     tags:
       Name: CallRaiseError function
+    depends_on:
+      - InvokeRaiseErrorRole
 
   InvokeDoLongTaskRole:
     type: lambda-role
@@ -96,6 +100,8 @@ resources:
       PAYLOAD: '{ "a": 1.2, "b": 2.3 }'
     tags:
       Name: CallDoLongTask function
+    depends_on:
+      - InvokeDoLongTaskRole
 
   ComplexCalculate:
     type: function
