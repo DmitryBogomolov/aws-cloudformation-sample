@@ -33,7 +33,6 @@ Resources: {}
         self.function_runtime = source.get('function_runtime')
         self.resources = []
         self.functions = []
-        self.roles = []
 
     def _dump(self, resource):
         resource['Description'] = self.description
@@ -50,6 +49,7 @@ Properties:
   Environment:
     Variables: {}
   Tags: {}
+DependsOn: []
 '''
 
     def __init__(self, name, source, root):
@@ -66,6 +66,9 @@ Properties:
         self.runtime = source.get('runtime') or root.function_runtime
         self.role = source.get('role')
         self.environment = take_dict(source, 'environment')
+        self.depends_on = source.get('depends_on') or []
+
+        self.log_group = LogGroup(name, root)
 
     def _dump(self, resource):
         properties = resource['Properties']
@@ -82,6 +85,8 @@ Properties:
                 self.root.bucket, self.root.project, helper.get_archive_name(self.code_uri))
         )
         properties['Environment']['Variables'].update(self.environment)
+        resource['DependsOn'].append(self.log_group.name)
+        resource['DependsOn'].extend(self.depends_on)
 
 
 class Policy(Base):
@@ -134,6 +139,22 @@ Properties:
         properties['Policies'].extend(policies)
 
 
+class LogGroup(Base):
+    TEMPLATE = \
+'''
+Type: AWS::Logs::LogGroup
+Properties:
+  LogGroupName: <LogGroupName>
+'''
+
+    def __init__(self, name, root):
+        self.name = name + 'LogGroup'
+        self.group_name = helper.get_log_group_name(root, name)
+
+    def _dump(self, resource):
+        resource['Properties']['LogGroupName'] = self.group_name
+
+
 def check_required_fields(source):
     absent = []
     for field in ('project', 'bucket'):
@@ -147,10 +168,10 @@ def process_resources(pattern, source):
         if resource['type'] == 'function':
             function = Function(name, resource, pattern)
             pattern.functions.append(function)
+            pattern.resources.append(function.log_group)
             pattern.resources.append(function)
         elif resource['type'] == 'lambda-role':
             role = LambdaRole(name, resource, pattern)
-            pattern.roles.append(role)
             pattern.resources.append(role)
 
 def create_pattern():

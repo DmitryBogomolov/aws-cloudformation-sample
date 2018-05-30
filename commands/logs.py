@@ -126,7 +126,7 @@ def print_event(event):
 
 def run(name):
     log('Getting logs')
-    group_name = '/aws/lambda/' + helper.get_function_name(pattern, name)
+    group_name = helper.get_log_group_name(pattern, name)
     try:
         streams = logs_client.describe_log_streams(logGroupName=group_name)['logStreams']
     except logs_client.exceptions.ResourceNotFoundException:

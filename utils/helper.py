@@ -29,6 +29,9 @@ def get_archive_path(archive_name):
 def get_function_name(pattern, name):
     return pattern.project + '-' + name
 
+def get_log_group_name(pattern, name):
+    return '/aws/lambda/' + get_function_name(pattern, name)
+
 def get_code_uri_list(pattern):
     return sorted(list(set(function.code_uri for function in pattern.functions)))
 
