@@ -2,7 +2,7 @@ import os
 from utils.yaml import load
 
 PACKAGE_PATH = os.path.abspath('.package')
-PATTERN_NAME = 'template.yaml'
+PATTERN_NAME = 'pattern.yaml'
 TEMPLATE_NAME = 'template.yaml'
 
 def ensure_folder():
