@@ -1,6 +1,6 @@
 import yaml
 from . import helper
-from .yaml import load
+from .yaml import load, Custom
 
 def take_dict(source, field):
     return source.get(field) or {}
@@ -20,10 +20,12 @@ AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Description: <Description>
 Resources: {}
+Outputs: {}
 '''
 
     def __init__(self, source):
         self.Resources = take_dict(source, 'Resources')
+        self.Outputs = take_dict(source, 'Outputs')
         self.project = source['project']
         self.bucket = source['bucket']
         self.description = source.get('description')
@@ -33,12 +35,16 @@ Resources: {}
         self.function_runtime = source.get('function_runtime')
         self.resources = []
         self.functions = []
+        self.outputs = []
 
     def _dump(self, resource):
         resource['Description'] = self.description
         resource['Resources'].update(self.Resources)
         resources = { obj.name: obj.dump() for obj in self.resources }
         resource['Resources'].update(resources)
+        resource['Outputs'].update(self.Outputs)
+        outputs = { obj.name: obj.dump() for obj in self.outputs }
+        resource['Outputs'].update(outputs)
 
 
 class Function(Base):
@@ -69,6 +75,10 @@ DependsOn: []
         self.depends_on = source.get('depends_on') or []
 
         self.log_group = LogGroup(name, root)
+        self.version = LambdaVersion(name)
+
+        self.output_name = Output(name, Custom('!Ref', name))
+        self.output_version = Output(self.version.name, Custom('!Ref', self.version.name))
 
     def _dump(self, resource):
         properties = resource['Properties']
@@ -155,6 +165,36 @@ Properties:
         resource['Properties']['LogGroupName'] = self.group_name
 
 
+class LambdaVersion(Base):
+    TEMPLATE = \
+'''
+Type: AWS::Lambda::Version
+Properties:
+  FunctionName: <FunctionName> 
+'''
+
+    def __init__(self, name):
+        self.name = name + 'Version'
+        self.function_name = Custom('!Ref', name)
+
+    def _dump(self, resource):
+       resource['Properties']['FunctionName'] = self.function_name
+
+
+class Output(Base):
+    TEMPLATE = \
+'''
+Value: <Value>
+'''
+
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+    def _dump(self, resource):
+        resource['Value'] = self.value
+
+
 def check_required_fields(source):
     absent = []
     for field in ('project', 'bucket'):
@@ -170,6 +210,9 @@ def process_resources(pattern, source):
             pattern.functions.append(function)
             pattern.resources.append(function.log_group)
             pattern.resources.append(function)
+            pattern.resources.append(function.version)
+            pattern.outputs.append(function.output_name)
+            pattern.outputs.append(function.output_version)
         elif resource['type'] == 'lambda-role':
             role = LambdaRole(name, resource, pattern)
             pattern.resources.append(role)
