@@ -1,12 +1,12 @@
 import boto3
-from .template import template
+from .pattern import pattern
 
 def make_session():
     kwargs = {}
-    if template.get('Profile'):
-        kwargs['profile_name'] = template['Profile']
-    if template.get('Region'):
-        kwargs['region_name'] = template['Region']
+    if pattern.profile:
+        kwargs['profile_name'] = pattern.profile
+    if pattern.region:
+        kwargs['region_name'] = pattern.region
     return boto3.Session(**kwargs)
 
 session = make_session()

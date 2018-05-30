@@ -3,7 +3,7 @@ from os import path
 import zipfile
 import shutil
 from utils import helper
-from utils.template import template
+from utils.pattern import pattern
 from utils.logger import log
 from .deploy_sources import run as call_deploy_sources
 
@@ -34,13 +34,13 @@ def build_archive(code_uri):
                 pack_directory(zf, code_uri, '')
     log(' - {} -> {} ({})', code_uri, archive_name, kind)
 
-def build_packages(template):
-    for code_uri in helper.get_code_uri_list(template):
+def build_packages(pattern):
+    for code_uri in helper.get_code_uri_list(pattern):
         build_archive(code_uri)
 
 def run(deploy_sources=False):
     log('Packing sources')
     helper.ensure_folder()
-    build_packages(template)
+    build_packages(pattern)
     if deploy_sources:
         call_deploy_sources()

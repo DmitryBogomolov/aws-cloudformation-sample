@@ -2,12 +2,23 @@
 
 import unittest
 import os
+
+from utils import yaml
+yaml.load = lambda _: { 'project': 'test', 'bucket': 'test' }
+
 from utils import helper
+# TODO: utils.pattern.py is imported - find a way to stub it.
+from commands import deploy_sources
+
+class Tester(object):
+    def __init__(self, **kwargs):
+        for name, value in kwargs.items():
+            setattr(self, name, value)
 
 class TestHelper(unittest.TestCase):
-    def test_get_template_path(self):
-        self.assertEqual(helper.get_template_path(),
-            os.path.realpath('template.yaml'))
+    def test_get_pattern_path(self):
+        self.assertEqual(helper.get_pattern_path(),
+            os.path.realpath('pattern.yaml'))
 
     def test_get_processed_template_path(self):
         self.assertEqual(helper.get_processed_template_path(),
@@ -33,12 +44,28 @@ class TestHelper(unittest.TestCase):
         self.assertEqual(helper.get_archive_path('test.zip'), os.path.realpath('.package/test.zip'))
 
     def test_get_function_name(self):
-        template = { 'Project': 'proj1' }
-        self.assertEqual(helper.get_function_name(template, 'func1'), 'proj1-func1')
+        pattern = Tester(project='proj1')
+        self.assertEqual(helper.get_function_name(pattern, 'func1'), 'proj1-func1')
 
+    def test_get_code_uri_list(self):
+        pattern = Tester(
+            functions=[
+                Tester(code_uri='uri-1'),
+                Tester(code_uri='uri-2'),
+                Tester(code_uri='uri-3'),
+                Tester(code_uri='uri-2'),
+                Tester(code_uri='uri-2'),
+                Tester(code_uri='uri-3'),
+                Tester(code_uri='uri-4')
+            ]
+        )
+        self.assertEqual(helper.get_code_uri_list(pattern),
+            ['uri-1', 'uri-2', 'uri-3', 'uri-4'])
+
+class TestDeploySources(unittest.TestCase):
     def test_get_s3_key(self):
-        template = { 'Project': 'proj1' }
-        self.assertEqual(helper.get_s3_key(template, 'obj1'), 'proj1/obj1')
+        pattern = Tester(project='proj1')
+        self.assertEqual(deploy_sources.get_s3_key(pattern, 'obj1'), 'proj1/obj1')
 
 if __name__ == '__main__':
     unittest.main()
