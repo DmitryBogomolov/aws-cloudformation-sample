@@ -49,7 +49,7 @@ def update_stack(stack_name, template_body):
         if err.last_response['StatusReason'] == 'No updates are to be performed.':
             log('no changes')
             return
-        raise err
+        raise RuntimeError(err.last_response)
     log('change set is created')
     log('updating stack')
     cf.execute_change_set(
