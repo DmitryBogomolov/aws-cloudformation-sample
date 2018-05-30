@@ -47,6 +47,10 @@ class TestHelper(unittest.TestCase):
         pattern = Tester(project='proj1')
         self.assertEqual(helper.get_function_name(pattern, 'func1'), 'proj1-func1')
 
+    def test_get_log_group_name(self):
+        pattern = Tester(project='proj1')
+        self.assertEqual(helper.get_log_group_name(pattern, 'func1'), '/aws/lambda/proj1-func1')
+
     def test_get_code_uri_list(self):
         pattern = Tester(
             functions=[
