@@ -88,12 +88,12 @@ DependsOn: []
             Description=self.description,
             Runtime=self.runtime,
             Timeout=self.timeout,
-            Tags=self.tags,
             Handler=self.handler,
             Role=self.role,
             CodeUri='s3://{}/{}/{}'.format(
                 self.root.bucket, self.root.project, helper.get_archive_name(self.code_uri))
         )
+        properties['Tags'].update(self.tags)
         properties['Environment']['Variables'].update(self.environment)
         resource['DependsOn'].append(self.log_group.name)
         resource['DependsOn'].extend(self.depends_on)
@@ -130,7 +130,6 @@ Properties:
           Service: lambda.amazonaws.com
         Action: sts:AssumeRole
   Path: /
-  RoleName: <RoleName>
   ManagedPolicyArns:
     - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
   Policies: []
@@ -156,8 +155,7 @@ class LogGroup(Base):
     TEMPLATE = \
 '''
 Type: AWS::Logs::LogGroup
-Properties:
-  LogGroupName: <LogGroupName>
+Properties: {}
 '''
 
     def __init__(self, name, root):
@@ -165,15 +163,15 @@ Properties:
         self.group_name = helper.get_log_group_name(root, name)
 
     def _dump(self, resource):
-        resource['Properties']['LogGroupName'] = self.group_name
+        properties = resource['Properties']
+        properties['LogGroupName'] = self.group_name
 
 
 class LambdaVersion(Base):
     TEMPLATE = \
 '''
 Type: AWS::Lambda::Version
-Properties:
-  FunctionName: <FunctionName>
+Properties: {}
 '''
 
     def __init__(self, name):
@@ -184,10 +182,35 @@ Properties:
        resource['Properties']['FunctionName'] = self.function_name
 
 
+class S3Bucket(Base):
+    TEMPLATE = \
+'''
+Type: AWS::S3::Bucket
+Properties:
+  Tags: []
+'''
+
+    def __init__(self, name, source, root):
+        self.root = root
+        self.name = name
+        self.Properties = take_dict(source, 'Properties')
+
+        self.tags = take_dict(source, 'tags')
+
+        self.output_name = Output(name, Custom('!Ref', name))
+        self.output_url = Output(name + 'Url', Custom('!GetAtt', name + '.WebsiteURL'))
+
+    def _dump(self, resource):
+        properties = resource['Properties']
+        properties.update(self.Properties)
+        tags = [{ 'Key': key, 'Value': value } for key, value in self.tags.items()]
+        properties['Tags'].extend(tags)
+
+
 class Output(Base):
     TEMPLATE = \
 '''
-Value: <Value>
+Value: null
 '''
 
     def __init__(self, name, value):
@@ -208,7 +231,8 @@ def check_required_fields(source):
 
 def process_resources(pattern, source):
     for name, resource in source.items():
-        if resource['type'] == 'function':
+        resource_type = resource['type']
+        if resource_type == 'function':
             function = Function(name, resource, pattern)
             pattern.functions.append(function)
             pattern.resources.append(function.log_group)
@@ -216,9 +240,14 @@ def process_resources(pattern, source):
             pattern.resources.append(function.version)
             pattern.outputs.append(function.output_name)
             pattern.outputs.append(function.output_version)
-        elif resource['type'] == 'lambda-role':
+        elif resource_type == 'lambda-role':
             role = LambdaRole(name, resource, pattern)
             pattern.resources.append(role)
+        elif resource_type == 'bucket':
+            bucket = S3Bucket(name, resource, pattern)
+            pattern.resources.append(bucket)
+            pattern.outputs.append(bucket.output_name)
+            pattern.outputs.append(bucket.output_url)
 
 def create_pattern():
     source = load(helper.get_pattern_path())

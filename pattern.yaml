@@ -111,3 +111,8 @@ resources:
     timeout: 15
     tags:
       Name: ComplexCalculate function
+
+  DataBucket:
+    type: bucket
+    tags:
+      Name: DataBucket s3 bucket
