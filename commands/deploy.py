@@ -39,7 +39,7 @@ def update_stack(stack_name, template_body):
     change_set_name = 'change-set-' + hashlib.sha256(template_body.encode()).hexdigest()[:8]
     cf.create_change_set(
         StackName=stack_name,
-        Capabilities=('CAPABILITY_IAM',),
+        Capabilities=('CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM'),
         TemplateBody=template_body,
         ChangeSetName=change_set_name
     )

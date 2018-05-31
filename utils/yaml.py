@@ -9,7 +9,7 @@ def custom_constructor(loader, node):
 def custom_representer(dumper, data):
     return dumper.represent_scalar(data.tag, data.value)
 
-for tag in ('!GetAtt', '!Ref'):
+for tag in ('!GetAtt', '!Ref', '!Sub'):
     yaml.add_constructor(tag, custom_constructor)
 yaml.add_representer(Custom, custom_representer)
 
