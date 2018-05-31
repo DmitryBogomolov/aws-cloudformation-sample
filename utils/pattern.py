@@ -130,6 +130,7 @@ Properties:
           Service: lambda.amazonaws.com
         Action: sts:AssumeRole
   Path: /
+  RoleName: <RoleName>
   ManagedPolicyArns:
     - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
   Policies: []
@@ -140,11 +141,13 @@ Properties:
         self.name = name
         self.Properties = take_dict(source, 'Properties')
 
+        self.role_name = Custom('!Sub', root.project + '-${AWS::Region}-' + name)
         self.policies = [Policy(**obj) for obj in source['policies']]
 
     def _dump(self, resource):
         properties = resource['Properties']
         properties.update(self.Properties)
+        properties['RoleName'] = self.role_name
         policies = [policy.dump() for policy in self.policies]
         properties['Policies'].extend(policies)
 
@@ -170,7 +173,7 @@ class LambdaVersion(Base):
 '''
 Type: AWS::Lambda::Version
 Properties:
-  FunctionName: <FunctionName> 
+  FunctionName: <FunctionName>
 '''
 
     def __init__(self, name):
