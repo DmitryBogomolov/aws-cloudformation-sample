@@ -13,7 +13,7 @@ def delete_stack(stack_name):
 
 def run(remove_sources=False):
     log('Removing stack')
-    delete_stack(pattern.project)
+    delete_stack(pattern.get('project'))
     log('Done')
     if remove_sources:
         call_remove_sources()

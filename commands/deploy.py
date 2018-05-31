@@ -65,7 +65,7 @@ def update_stack(stack_name, template_body):
 
 def run():
     log('Deploying stack')
-    stack_name = pattern.project
+    stack_name = pattern.get('project')
     template_body = get_template_body()
     cf.validate_template(TemplateBody=template_body)
     create_stack(stack_name)
