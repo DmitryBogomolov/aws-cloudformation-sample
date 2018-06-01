@@ -61,8 +61,8 @@ Outputs: {}
             resources[obj.name] = obj.dump()
         outputs = template['Outputs']
         outputs.update(self.get_map('Outputs'))
-        for obj in self.outputs:
-            outputs[obj.name] = obj.dump()
+        for name, value in self.outputs:
+            outputs[name] = { 'Value': value }
 
     def get_function(self, name):
         return next((func for func in self.functions if func.name == name), None)
@@ -109,8 +109,8 @@ DependsOn: []
         self.log_group = LogGroup(name, self.full_name)
         self.version = LambdaVersion(name)
 
-        output_name = Output(name, Custom('!Ref', name))
-        output_version = Output(self.version.name, Custom('!Ref', self.version.name))
+        output_name = (name, Custom('!Ref', name))
+        output_version = (self.version.name, Custom('!Ref', self.version.name))
 
         return [self.log_group, self.version], [output_name, output_version]
 
@@ -243,8 +243,8 @@ Properties:
     def init(self):
         name = self.name
 
-        output_name = Output(name, Custom('!Ref', name))
-        output_url = Output(name + 'Url', Custom('!GetAtt', name + '.WebsiteURL'))
+        output_name = (name, Custom('!Ref', name))
+        output_url = (name + 'Url', Custom('!GetAtt', name + '.WebsiteURL'))
 
         return [], [output_name, output_url]
 
@@ -316,7 +316,12 @@ DependsOn: []
 '''
 
     def init(self):
-        return [], []
+        name = self.name
+
+        output_name = (name, Custom('!Ref', name))
+        output_arn = (name + 'Arn', Custom('!GetAtt', name + '.Arn'))
+
+        return [], [output_name, output_arn]
 
     def _dump(self, template):
         super()._dump(template)
@@ -344,18 +349,6 @@ DependsOn: []
 
 
 Root.RESOURCE_TYPES['dynamodb-table'] = DynamoDBTable
-
-
-class Output(Base):
-    TEMPLATE = '{}'
-
-    def __init__(self, name, value):
-        super().__init__(None)
-        self.name = name
-        self.value = value
-
-    def _dump(self, template):
-        template['Value'] = self.value
 
 
 def check_required_fields(source):
