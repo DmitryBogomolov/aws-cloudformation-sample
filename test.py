@@ -12,8 +12,10 @@ from commands import deploy_sources
 
 class Tester(object):
     def __init__(self, **kwargs):
-        for name, value in kwargs.items():
-            setattr(self, name, value)
+        self.data = kwargs
+
+    def get(self, name):
+        return self.data[name]
 
 class TestHelper(unittest.TestCase):
     def test_get_pattern_path(self):
@@ -43,26 +45,17 @@ class TestHelper(unittest.TestCase):
     def test_get_archive_path(self):
         self.assertEqual(helper.get_archive_path('test.zip'), os.path.realpath('.package/test.zip'))
 
-    def test_get_function_name(self):
-        pattern = Tester(project='proj1')
-        self.assertEqual(helper.get_function_name(pattern, 'func1'), 'proj1-func1')
-
-    def test_get_log_group_name(self):
-        pattern = Tester(project='proj1')
-        self.assertEqual(helper.get_log_group_name(pattern, 'func1'), '/aws/lambda/proj1-func1')
-
     def test_get_code_uri_list(self):
-        pattern = Tester(
-            functions=[
-                Tester(code_uri='uri-1'),
-                Tester(code_uri='uri-2'),
-                Tester(code_uri='uri-3'),
-                Tester(code_uri='uri-2'),
-                Tester(code_uri='uri-2'),
-                Tester(code_uri='uri-3'),
-                Tester(code_uri='uri-4')
-            ]
-        )
+        pattern = Tester()
+        pattern.functions = [
+            Tester(code_uri='uri-1'),
+            Tester(code_uri='uri-2'),
+            Tester(code_uri='uri-3'),
+            Tester(code_uri='uri-2'),
+            Tester(code_uri='uri-2'),
+            Tester(code_uri='uri-3'),
+            Tester(code_uri='uri-4')
+        ]
         self.assertEqual(helper.get_code_uri_list(pattern),
             ['uri-1', 'uri-2', 'uri-3', 'uri-4'])
 
