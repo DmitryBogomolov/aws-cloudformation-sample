@@ -85,6 +85,9 @@ class BaseResource(Base):
         self._dump_properties(properties)
 
 
+def set_depends_on(template, resource):
+    template['DependsOn'].extend(resource.get_list('depends_on'))
+
 class Function(BaseResource):
     TEMPLATE = \
 '''
@@ -114,7 +117,7 @@ DependsOn: []
     def _dump(self, template):
         super()._dump(template)
         template['DependsOn'].append(self.log_group.name)
-        template['DependsOn'].extend(self.get_list('depends_on'))
+        set_depends_on(template, self)
 
     def _dump_properties(self, properties):
         properties['FunctionName'] = self.full_name
@@ -148,14 +151,13 @@ PolicyDocument:
   Statement: []
 '''
 
-    def __init__(self, name, statement):
-        super().__init__(None)
-        self.name = name
-        self.statement = statement
-
     def _dump(self, template):
-        template['PolicyName'] = self.name
-        template['PolicyDocument']['Statement'].extend(self.statement)
+        template['PolicyName'] = self.get('name')
+        template['PolicyDocument']['Statement'].extend(self.get_list('statement'))
+
+
+def set_sub_list(target, resource, field, SubResouce):
+    target.extend([SubResouce(obj).dump() for obj in resource.get_list(field)])
 
 
 class LambdaRole(BaseResource):
@@ -182,13 +184,12 @@ DependsOn: []
 
     def _dump(self, template):
         super()._dump(template)
-        template['DependsOn'].extend(self.get_list('depends_on'))
+        set_depends_on(template, self)
 
     def _dump_properties(self, properties):
         properties['RoleName'] = Custom('!Sub',
             self.root.get('project') + '-${AWS::Region}-' + self.name)
-        policies = [Policy(**policy).dump() for policy in self.get_list('policies')]
-        properties['Policies'].extend(policies)
+        set_sub_list(properties['Policies'], self, 'policies', Policy)
 
 
 Root.RESOURCE_TYPES['lambda-role'] = LambdaRole
@@ -226,6 +227,11 @@ Properties: {}
        template['Properties']['FunctionName'] = Custom('!Ref', self.function_name)
 
 
+def set_tags_list(template, resource):
+    tags = [{ 'Key': key, 'Value': value } for key, value in resource.get_map('tags').items()]
+    template['Tags'].extend(tags)
+
+
 class S3Bucket(BaseResource):
     TEMPLATE = \
 '''
@@ -243,11 +249,101 @@ Properties:
         return [], [output_name, output_url]
 
     def _dump_properties(self, properties):
-        tags = [{ 'Key': key, 'Value': value } for key, value in self.get_map('tags').items()]
-        properties['Tags'].extend(tags)
+        set_tags_list(properties, self)
 
 
 Root.RESOURCE_TYPES['bucket'] = S3Bucket
+
+
+def take_pair(obj):
+    return list(obj.items())[0]
+
+def set_key_schema(template, resource):
+    for obj in resource.get_list('key_schema'):
+        name, value = take_pair(obj)
+        template['KeySchema'].append({
+            'AttributeName': name,
+            'KeyType': value
+        })
+
+def set_throughput(template, resource):
+    source = resource.try_get('provisioned_throughput')
+    if source:
+        try_set_field(template['ProvisionedThroughput'], 'ReadCapacityUnits',
+            source['read_capacity_units'])
+        try_set_field(template['ProvisionedThroughput'], 'WriteCapacityUnits',
+            source['write_capacity_units'])
+
+class LocalSecondaryIndex(Base):
+    TEMPLATE = \
+'''
+KeySchema: []
+Projection: {}
+'''
+
+    def _dump(self, template):
+        template['IndexName'] = self.get('index_name')
+        set_key_schema(template, self)
+        projection = self.get_map('projection')
+        if projection:
+            try_set_field(template['Projection'], 'ProjectionType', projection['projection_type'])
+
+
+class GlobalSecondaryIndex(LocalSecondaryIndex):
+    TEMPLATE = LocalSecondaryIndex.TEMPLATE + \
+'''
+ProvisionedThroughput: {}
+'''
+
+    def _dump(self, template):
+        super()._dump(template)
+        set_throughput(template, self)
+
+
+class DynamoDBTable(BaseResource):
+    TEMPLATE = \
+'''
+Type: AWS::DynamoDB::Table
+Properties:
+  AttributeDefinitions: []
+  KeySchema: []
+  ProvisionedThroughput: {}
+  StreamSpecification: {}
+  LocalSecondaryIndexes: []
+  GlobalSecondaryIndexes: []
+  Tags: []
+DependsOn: []
+'''
+
+    def init(self):
+        return [], []
+
+    def _dump(self, template):
+        super()._dump(template)
+        set_depends_on(template, self)
+
+    def _dump_properties(self, properties):
+        properties['TableName'] = self.get('table_name')
+        for obj in self.get_list('attribute_definitions'):
+            name, value = take_pair(obj)
+            properties['AttributeDefinitions'].append({
+                'AttributeName': name,
+                'AttributeType': value
+            })
+        set_key_schema(properties, self)
+        set_throughput(properties, self)
+        stream_specification = self.get_map('stream_specification')
+        if stream_specification:
+            try_set_field(properties['StreamSpecification'], 'StreamViewType',
+                stream_specification['stream_view_type'])
+        set_sub_list(properties['LocalSecondaryIndexes'],
+            self, 'local_secondary_indexes', LocalSecondaryIndex)
+        set_sub_list(properties['GlobalSecondaryIndexes'],
+            self, 'global_secondary_indexes', GlobalSecondaryIndex)
+        set_tags_list(properties, self)
+
+
+Root.RESOURCE_TYPES['dynamodb-table'] = DynamoDBTable
 
 
 class Output(Base):

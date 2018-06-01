@@ -142,3 +142,39 @@ resources:
     depends_on:
       - CheckBucketRole
       - DataBucket
+
+  Table:
+    type: dynamodb-table
+    table_name: my-test-table-1
+    attribute_definitions:
+      - id: S
+      - timestamp: N
+      - type: S
+      - position: N
+    key_schema:
+      - id: HASH
+      - timestamp: RANGE
+    provisioned_throughput:
+      read_capacity_units: 5
+      write_capacity_units: 5
+    stream_specification:
+      stream_view_type: NEW_IMAGE
+    local_secondary_indexes:
+      - index_name: test-local-index
+        key_schema:
+          - id: HASH
+          - position: RANGE
+        projection:
+          projection_type: ALL
+    global_secondary_indexes:
+      - index_name: test-global-index
+        key_schema:
+          - type: HASH
+          - timestamp: RANGE
+        projection:
+          projection_type: ALL
+        provisioned_throughput:
+          read_capacity_units: 1
+          write_capacity_units: 1
+    tags:
+      Name: Test table
