@@ -234,12 +234,6 @@ Properties:
   Tags: []
 '''
 
-    def __init__(self, source, name, root):
-        super().__init__(source, name, root)
-
-        self.output_name = Output(name, Custom('!Ref', name))
-        self.output_url = Output(name + 'Url', Custom('!GetAtt', name + '.WebsiteURL'))
-
     def init(self):
         name = self.name
 
