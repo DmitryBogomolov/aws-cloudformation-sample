@@ -33,6 +33,9 @@ def create_stack(stack_name):
         log('stack is created')
     except cf.exceptions.AlreadyExistsException:
         log('stack already exists')
+    except WaiterError as err:
+        log('stack is not created')
+        raise RuntimeError(err.last_response)
 
 def update_stack(stack_name, template_body):
     log('creating change set')
