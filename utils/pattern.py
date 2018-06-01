@@ -33,12 +33,25 @@ Resources: {}
 Outputs: {}
 '''
 
+    RESOURCE_TYPES = {}
+
     def __init__(self, source):
         super().__init__(source)
 
         self.resources = []
         self.outputs = []
         self.functions = []
+
+    def init(self):
+        for name, source in self.get_map('resources').items():
+            Resource = self.RESOURCE_TYPES[source['type']]
+            resource = Resource(source, name, self)
+            resources, outputs = resource.init()
+            self.resources.append(resource)
+            self.resources.extend(resources)
+            self.outputs.extend(outputs)
+            if isinstance(resource, Function):
+                self.functions.append(resource)
 
     def _dump(self, template):
         template['Description'] = self.try_get('description')
@@ -87,11 +100,16 @@ DependsOn: []
         super().__init__(source, name, root)
         self.full_name = root.get('project') + '-' + name
 
+    def init(self):
+        name = self.name
+
         self.log_group = LogGroup(name, self.full_name)
         self.version = LambdaVersion(name)
 
-        self.output_name = Output(name, Custom('!Ref', name))
-        self.output_version = Output(self.version.name, Custom('!Ref', self.version.name))
+        output_name = Output(name, Custom('!Ref', name))
+        output_version = Output(self.version.name, Custom('!Ref', self.version.name))
+
+        return [self.log_group, self.version], [output_name, output_version]
 
     def _dump(self, template):
         super()._dump(template)
@@ -114,6 +132,11 @@ DependsOn: []
         try_set_field(properties, 'Role', self.try_get('role'))
         properties['Tags'].update(self.get_map('tags'))
         properties['Environment']['Variables'].update(self.get_map('environment'))
+        if len(properties['Environment']['Variables']) == 0:
+            properties.pop('Environment')
+
+
+Root.RESOURCE_TYPES['function'] = Function
 
 
 class Policy(Base):
@@ -153,11 +176,17 @@ Properties:
   Policies: []
 '''
 
+    def init(self):
+        return [], []
+
     def _dump_properties(self, properties):
         properties['RoleName'] = Custom('!Sub',
             self.root.get('project') + '-${AWS::Region}-' + self.name)
         policies = [Policy(**policy).dump() for policy in self.get_list('policies')]
         properties['Policies'].extend(policies)
+
+
+Root.RESOURCE_TYPES['lambda-role'] = LambdaRole
 
 
 class LogGroup(Base):
@@ -186,9 +215,10 @@ Properties: {}
     def __init__(self, name):
         super().__init__(None)
         self.name = name + 'Version'
+        self.function_name = name
 
     def _dump(self, template):
-       template['Properties']['FunctionName'] = Custom('!Ref', self.name)
+       template['Properties']['FunctionName'] = Custom('!Ref', self.function_name)
 
 
 class S3Bucket(BaseResource):
@@ -205,9 +235,20 @@ Properties:
         self.output_name = Output(name, Custom('!Ref', name))
         self.output_url = Output(name + 'Url', Custom('!GetAtt', name + '.WebsiteURL'))
 
+    def init(self):
+        name = self.name
+
+        output_name = Output(name, Custom('!Ref', name))
+        output_url = Output(name + 'Url', Custom('!GetAtt', name + '.WebsiteURL'))
+
+        return [], [output_name, output_url]
+
     def _dump_properties(self, properties):
         tags = [{ 'Key': key, 'Value': value } for key, value in self.get_map('tags').items()]
         properties['Tags'].extend(tags)
+
+
+Root.RESOURCE_TYPES['bucket'] = S3Bucket
 
 
 class Output(Base):
@@ -230,31 +271,11 @@ def check_required_fields(source):
     if len(absent) > 0:
         raise Exception('The following fields are not defined: {}'.format(', '.join(absent)))
 
-def process_resources(root, source):
-    for name, resource in source.items():
-        resource_type = resource['type']
-        if resource_type == 'function':
-            function = Function(resource, name, root)
-            root.functions.append(function)
-            root.resources.append(function.log_group)
-            root.resources.append(function)
-            root.resources.append(function.version)
-            root.outputs.append(function.output_name)
-            root.outputs.append(function.output_version)
-        elif resource_type == 'lambda-role':
-            role = LambdaRole(resource, name, root)
-            root.resources.append(role)
-        elif resource_type == 'bucket':
-            bucket = S3Bucket(resource, name, root)
-            root.resources.append(bucket)
-            root.outputs.append(bucket.output_name)
-            root.outputs.append(bucket.output_url)
-
 def create_pattern():
     source = load(helper.get_pattern_path())
     check_required_fields(source)
     root = Root(source)
-    process_resources(root, source.get('resources', {}))
+    root.init()
     return root
 
 pattern = create_pattern()
