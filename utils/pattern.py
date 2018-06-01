@@ -174,10 +174,15 @@ Properties:
   ManagedPolicyArns:
     - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
   Policies: []
+DependsOn: []
 '''
 
     def init(self):
         return [], []
+
+    def _dump(self, template):
+        super()._dump(template)
+        template['DependsOn'].extend(self.get_list('depends_on'))
 
     def _dump_properties(self, properties):
         properties['RoleName'] = Custom('!Sub',
