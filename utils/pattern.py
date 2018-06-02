@@ -8,17 +8,11 @@ class Base(object):
     def __init__(self, source):
         self._source = source
 
-    def get(self, name):
-        return self._source[name]
-
-    def try_get(self, name):
-        return self._source.get(name)
-
-    def get_map(self, name):
-        return self._source.get(name, {})
-
-    def get_list(self, name):
-        return self._source.get(name, [])
+    def get(self, name, default=None):
+        value = self._source.get(name, default)
+        if value is None:
+            raise Exception('Field "{}" is not defined.'.format(name))
+        return value
 
     def get_path(self, name):
         obj = self._source
@@ -27,12 +21,17 @@ class Base(object):
         return obj
 
     def dump(self):
-        resource = yaml.load(self.TEMPLATE)
-        self._dump(resource)
-        return resource
+        template = yaml.load(self.TEMPLATE)
+        self._dump(template)
+        return template
 
     def _dump(self, template):
-        raise Exception('Not implemented')
+        raise Exception('Abstract')
+
+
+def try_set_field(target, name, value):
+    if value:
+        target[name] = value
 
 
 class Root(Base):
@@ -50,49 +49,40 @@ Outputs: {}
         super().__init__(source)
 
         self.resources = []
-        self.outputs = []
         self.functions = []
 
-    def init(self):
-        for name, source in self.get_map('resources').items():
+        for name, source in self.get('resources', {}).items():
             Resource = self.RESOURCE_TYPES[source['type']]
-            resource = Resource(source, name, self)
-            resources, outputs = resource.init()
+            resource = Resource(name, source, self)
             self.resources.append(resource)
-            self.resources.extend(resources)
-            self.outputs.extend(outputs)
             if isinstance(resource, Function):
                 self.functions.append(resource)
 
     def _dump(self, template):
-        template['Description'] = self.try_get('description')
-        resources = template['Resources']
-        resources.update(self.get_map('Resources'))
+        try_set_field(template, 'Description', self.get('description', ''))
+        template['Resources'].update(self.get('Resources', {}))
+        template['Outputs'].update(self.get('Outputs', {}))
         for obj in self.resources:
-            resources[obj.name] = obj.dump()
-        outputs = template['Outputs']
-        outputs.update(self.get_map('Outputs'))
-        for name, value in self.outputs:
-            outputs[name] = { 'Value': value }
+            obj.dump(template)
 
     def get_function(self, name):
         return next((func for func in self.functions if func.name == name), None)
 
 
-def try_set_field(target, name, value):
-    if value:
-        target[name] = value
-
-
 class BaseResource(Base):
-    def __init__(self, source, name, root):
+    def __init__(self, name, source, root):
         super().__init__(source)
         self.name = name
         self.root = root
 
-    def _dump(self, template):
+    def dump(self, parent_template):
+        template = yaml.load(self.TEMPLATE)
+        self._dump(template, parent_template)
+        parent_template['Resources'][self.name] = template
+
+    def _dump(self, template, parent_template):
         properties = template['Properties']
-        properties.update(self.get_map('Properties'))
+        properties.update(self.get('Properties', {}))
         self._dump_properties(properties)
 
     def _dump_properties(self, properties):
@@ -100,7 +90,11 @@ class BaseResource(Base):
 
 
 def set_depends_on(template, resource):
-    template['DependsOn'].extend(resource.get_list('depends_on'))
+    template['DependsOn'].extend(resource.get('depends_on', []))
+
+def make_output(value):
+    return { 'Value': value }
+
 
 class Function(BaseResource):
     TEMPLATE = \
@@ -113,24 +107,22 @@ Properties:
 DependsOn: []
 '''
 
-    def __init__(self, source, name, root):
-        super().__init__(source, name, root)
-        self.full_name = root.get('project') + '-' + name
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.full_name = self.root.get('project') + '-' + self.name
 
-    def init(self):
+    def _dump(self, template, parent_template):
+        super()._dump(template, parent_template)
+
         name = self.name
+        log_group = LogGroup(name, self.full_name)
+        version = LambdaVersion(name)
+        parent_template['Resources'][log_group.name] = log_group.dump()
+        parent_template['Resources'][version.name] = version.dump()
+        parent_template['Outputs'][name] = make_output(Custom('!Ref', name))
+        parent_template['Outputs'][version.name] = make_output(Custom('!Ref', version.name))
 
-        self.log_group = LogGroup(name, self.full_name)
-        self.version = LambdaVersion(name)
-
-        output_name = (name, Custom('!Ref', name))
-        output_version = (self.version.name, Custom('!Ref', self.version.name))
-
-        return [self.log_group, self.version], [output_name, output_version]
-
-    def _dump(self, template):
-        super()._dump(template)
-        template['DependsOn'].append(self.log_group.name)
+        template['DependsOn'].append(log_group.name)
         set_depends_on(template, self)
 
     def _dump_properties(self, properties):
@@ -141,14 +133,14 @@ DependsOn: []
             self.root.get('project'),
             helper.get_archive_name(self.get('code_uri'))
         )
-        try_set_field(properties, 'Description', self.try_get('description'))
+        try_set_field(properties, 'Description', self.get('description', ''))
         try_set_field(properties, 'Runtime',
-            self.try_get('runtime') or self.root.try_get('function_runtime'))
+            self.get('runtime', '') or self.root.get('function_runtime', ''))
         try_set_field(properties, 'Timeout',
-            self.try_get('timeout') or self.root.try_get('function_timeout'))
-        try_set_field(properties, 'Role', self.try_get('role'))
-        properties['Tags'].update(self.get_map('tags'))
-        properties['Environment']['Variables'].update(self.get_map('environment'))
+            self.get('timeout', '') or self.root.get('function_timeout', ''))
+        try_set_field(properties, 'Role', self.get('role', ''))
+        properties['Tags'].update(self.get('tags', {}))
+        properties['Environment']['Variables'].update(self.get('environment', {}))
         if len(properties['Environment']['Variables']) == 0:
             properties.pop('Environment')
 
@@ -167,11 +159,11 @@ PolicyDocument:
 
     def _dump(self, template):
         template['PolicyName'] = self.get('name')
-        template['PolicyDocument']['Statement'].extend(self.get_list('statement'))
+        template['PolicyDocument']['Statement'].extend(self.get('statement', []))
 
 
 def set_sub_list(target, resource, field, SubResouce):
-    target.extend([SubResouce(obj).dump() for obj in resource.get_list(field)])
+    target.extend([SubResouce(obj).dump() for obj in resource.get(field, [])])
 
 
 class LambdaRole(BaseResource):
@@ -193,11 +185,8 @@ Properties:
 DependsOn: []
 '''
 
-    def init(self):
-        return [], []
-
-    def _dump(self, template):
-        super()._dump(template)
+    def _dump(self, template, parent_template):
+        super()._dump(template, parent_template)
         set_depends_on(template, self)
 
     def _dump_properties(self, properties):
@@ -242,7 +231,7 @@ Properties: {}
 
 
 def set_tags_list(template, resource):
-    tags = [{ 'Key': key, 'Value': value } for key, value in resource.get_map('tags').items()]
+    tags = [{ 'Key': key, 'Value': value } for key, value in resource.get('tags', {}).items()]
     template['Tags'].extend(tags)
 
 
@@ -254,13 +243,12 @@ Properties:
   Tags: []
 '''
 
-    def init(self):
+    def _dump(self, template, parent_template):
+        super()._dump(template, parent_template)
         name = self.name
-
-        output_name = (name, Custom('!Ref', name))
-        output_url = (name + 'Url', Custom('!GetAtt', name + '.WebsiteURL'))
-
-        return [], [output_name, output_url]
+        parent_template['Outputs'][name] = make_output(Custom('!Ref', name))
+        parent_template['Outputs'][name + 'Url'] = make_output(
+            Custom('!GetAtt', name + '.WebsiteURL'))
 
     def _dump_properties(self, properties):
         set_tags_list(properties, self)
@@ -273,7 +261,7 @@ def take_pair(obj):
     return list(obj.items())[0]
 
 def set_key_schema(template, resource):
-    for obj in resource.get_list('key_schema'):
+    for obj in resource.get('key_schema', []):
         name, value = take_pair(obj)
         template['KeySchema'].append({
             'AttributeName': name,
@@ -281,12 +269,10 @@ def set_key_schema(template, resource):
         })
 
 def set_throughput(template, resource):
-    source = resource.try_get('provisioned_throughput')
-    if source:
-        try_set_field(template['ProvisionedThroughput'], 'ReadCapacityUnits',
-            source['read_capacity_units'])
-        try_set_field(template['ProvisionedThroughput'], 'WriteCapacityUnits',
-            source['write_capacity_units'])
+    try_set_field(template['ProvisionedThroughput'], 'ReadCapacityUnits',
+        resource.get_path('provisioned_throughput.read_capacity_units'))
+    try_set_field(template['ProvisionedThroughput'], 'WriteCapacityUnits',
+        resource.get_path('provisioned_throughput.write_capacity_units'))
 
 class LocalSecondaryIndex(Base):
     TEMPLATE = \
@@ -298,9 +284,8 @@ Projection: {}
     def _dump(self, template):
         template['IndexName'] = self.get('index_name')
         set_key_schema(template, self)
-        projection = self.get_map('projection')
-        if projection:
-            try_set_field(template['Projection'], 'ProjectionType', projection['projection_type'])
+        try_set_field(template['Projection'], 'ProjectionType',
+            self.get_path('projection.projection_type'))
 
 
 class GlobalSecondaryIndex(LocalSecondaryIndex):
@@ -329,21 +314,16 @@ Properties:
 DependsOn: []
 '''
 
-    def init(self):
+    def _dump(self, template, parent_template):
+        super()._dump(template, parent_template)
         name = self.name
-
-        output_name = (name, Custom('!Ref', name))
-        output_arn = (name + 'Arn', Custom('!GetAtt', name + '.Arn'))
-
-        return [], [output_name, output_arn]
-
-    def _dump(self, template):
-        super()._dump(template)
+        parent_template['Outputs'][name] = make_output(Custom('!Ref', name))
+        parent_template['Outputs'][name + 'Arn'] = make_output(Custom('!GetAtt', name + '.Arn'))
         set_depends_on(template, self)
 
     def _dump_properties(self, properties):
         properties['TableName'] = self.get('table_name')
-        for obj in self.get_list('attribute_definitions'):
+        for obj in self.get('attribute_definitions', []):
             name, value = take_pair(obj)
             properties['AttributeDefinitions'].append({
                 'AttributeName': name,
@@ -351,10 +331,8 @@ DependsOn: []
             })
         set_key_schema(properties, self)
         set_throughput(properties, self)
-        stream_specification = self.get_map('stream_specification')
-        if stream_specification:
-            try_set_field(properties['StreamSpecification'], 'StreamViewType',
-                stream_specification['stream_view_type'])
+        try_set_field(properties['StreamSpecification'], 'StreamViewType',
+            self.get_path('stream_specification.stream_view_type'))
         set_sub_list(properties['LocalSecondaryIndexes'],
             self, 'local_secondary_indexes', LocalSecondaryIndex)
         set_sub_list(properties['GlobalSecondaryIndexes'],
@@ -376,8 +354,6 @@ def check_required_fields(source):
 def create_pattern():
     source = load(helper.get_pattern_path())
     check_required_fields(source)
-    root = Root(source)
-    root.init()
-    return root
+    return Root(source)
 
 pattern = create_pattern()
