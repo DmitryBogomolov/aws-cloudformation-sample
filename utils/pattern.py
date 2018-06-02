@@ -3,6 +3,8 @@ from . import helper
 from .yaml import load, Custom
 
 class Base(object):
+    TEMPLATE = None
+
     def __init__(self, source):
         self._source = source
 
@@ -18,10 +20,19 @@ class Base(object):
     def get_list(self, name):
         return self._source.get(name, [])
 
+    def get_path(self, name):
+        obj = self._source
+        for item in name.split('.'):
+            obj = obj.get(item)
+        return obj
+
     def dump(self):
         resource = yaml.load(self.TEMPLATE)
         self._dump(resource)
         return resource
+
+    def _dump(self, template):
+        raise Exception('Not implemented')
 
 
 class Root(Base):
@@ -83,6 +94,9 @@ class BaseResource(Base):
         properties = template['Properties']
         properties.update(self.get_map('Properties'))
         self._dump_properties(properties)
+
+    def _dump_properties(self, properties):
+        raise Exception('Not implemented')
 
 
 def set_depends_on(template, resource):
