@@ -3,7 +3,6 @@ from datetime import datetime
 from collections import namedtuple
 import concurrent.futures
 import operator
-from utils import helper
 from utils.client import client
 from utils.pattern import pattern
 from utils.logger import log, logError
@@ -126,7 +125,11 @@ def print_event(event):
 
 def run(name):
     log('Getting logs')
-    group_name = helper.get_log_group_name(pattern, name)
+    try:
+        group_name = pattern.get_function(name).log_group.group_name
+    except:
+        log('Log group *{}* is unknown.', name)
+        return 1
     try:
         streams = logs_client.describe_log_streams(logGroupName=group_name)['logStreams']
     except logs_client.exceptions.ResourceNotFoundException:

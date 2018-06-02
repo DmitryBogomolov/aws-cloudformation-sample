@@ -2,11 +2,22 @@ import yaml
 from . import helper
 from .yaml import load, Custom
 
-def take_dict(source, field):
-    return source.get(field) or {}
-
-
 class Base(object):
+    def __init__(self, source):
+        self._source = source
+
+    def get(self, name):
+        return self._source[name]
+
+    def try_get(self, name):
+        return self._source.get(name)
+
+    def get_map(self, name):
+        return self._source.get(name, {})
+
+    def get_list(self, name):
+        return self._source.get(name, [])
+
     def dump(self):
         resource = yaml.load(self.TEMPLATE)
         self._dump(resource)
@@ -18,36 +29,63 @@ class Root(Base):
 '''
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
-Description: <Description>
 Resources: {}
 Outputs: {}
 '''
 
+    RESOURCE_TYPES = {}
+
     def __init__(self, source):
-        self.Resources = take_dict(source, 'Resources')
-        self.Outputs = take_dict(source, 'Outputs')
-        self.project = source['project']
-        self.bucket = source['bucket']
-        self.description = source.get('description')
-        self.profile = source.get('profile')
-        self.region = source.get('region')
-        self.function_timeout = source.get('function_timeout')
-        self.function_runtime = source.get('function_runtime')
+        super().__init__(source)
+
         self.resources = []
-        self.functions = []
         self.outputs = []
+        self.functions = []
 
-    def _dump(self, resource):
-        resource['Description'] = self.description
-        resource['Resources'].update(self.Resources)
-        resources = { obj.name: obj.dump() for obj in self.resources }
-        resource['Resources'].update(resources)
-        resource['Outputs'].update(self.Outputs)
-        outputs = { obj.name: obj.dump() for obj in self.outputs }
-        resource['Outputs'].update(outputs)
+    def init(self):
+        for name, source in self.get_map('resources').items():
+            Resource = self.RESOURCE_TYPES[source['type']]
+            resource = Resource(source, name, self)
+            resources, outputs = resource.init()
+            self.resources.append(resource)
+            self.resources.extend(resources)
+            self.outputs.extend(outputs)
+            if isinstance(resource, Function):
+                self.functions.append(resource)
+
+    def _dump(self, template):
+        template['Description'] = self.try_get('description')
+        resources = template['Resources']
+        resources.update(self.get_map('Resources'))
+        for obj in self.resources:
+            resources[obj.name] = obj.dump()
+        outputs = template['Outputs']
+        outputs.update(self.get_map('Outputs'))
+        for obj in self.outputs:
+            outputs[obj.name] = obj.dump()
+
+    def get_function(self, name):
+        return next((func for func in self.functions if func.name == name), None)
 
 
-class Function(Base):
+def try_set_field(target, name, value):
+    if value:
+        target[name] = value
+
+
+class BaseResource(Base):
+    def __init__(self, source, name, root):
+        super().__init__(source)
+        self.name = name
+        self.root = root
+
+    def _dump(self, template):
+        properties = template['Properties']
+        properties.update(self.get_map('Properties'))
+        self._dump_properties(properties)
+
+
+class Function(BaseResource):
     TEMPLATE = \
 '''
 Type: AWS::Serverless::Function
@@ -58,45 +96,47 @@ Properties:
 DependsOn: []
 '''
 
-    def __init__(self, name, source, root):
-        self.root = root
-        self.name = name
-        self.Properties = take_dict(source, 'Properties')
+    def __init__(self, source, name, root):
+        super().__init__(source, name, root)
+        self.full_name = root.get('project') + '-' + name
 
-        self.description = source.get('description')
-        self.full_name = helper.get_function_name(root, name)
-        self.handler = source['handler']
-        self.code_uri = source['code_uri']
-        self.tags = take_dict(source, 'tags')
-        self.timeout = source.get('timeout') or root.function_timeout
-        self.runtime = source.get('runtime') or root.function_runtime
-        self.role = source.get('role')
-        self.environment = take_dict(source, 'environment')
-        self.depends_on = source.get('depends_on') or []
+    def init(self):
+        name = self.name
 
-        self.log_group = LogGroup(name, root)
+        self.log_group = LogGroup(name, self.full_name)
         self.version = LambdaVersion(name)
 
-        self.output_name = Output(name, Custom('!Ref', name))
-        self.output_version = Output(self.version.name, Custom('!Ref', self.version.name))
+        output_name = Output(name, Custom('!Ref', name))
+        output_version = Output(self.version.name, Custom('!Ref', self.version.name))
 
-    def _dump(self, resource):
-        properties = resource['Properties']
-        properties.update(self.Properties)
-        properties.update(
-            FunctionName=self.full_name,
-            Description=self.description,
-            Runtime=self.runtime,
-            Timeout=self.timeout,
-            Tags=self.tags,
-            Handler=self.handler,
-            Role=self.role,
-            CodeUri='s3://{}/{}/{}'.format(
-                self.root.bucket, self.root.project, helper.get_archive_name(self.code_uri))
+        return [self.log_group, self.version], [output_name, output_version]
+
+    def _dump(self, template):
+        super()._dump(template)
+        template['DependsOn'].append(self.log_group.name)
+        template['DependsOn'].extend(self.get_list('depends_on'))
+
+    def _dump_properties(self, properties):
+        properties['FunctionName'] = self.full_name
+        properties['Handler'] = self.get('handler')
+        properties['CodeUri'] = 's3://{}/{}/{}'.format(
+            self.root.get('bucket'),
+            self.root.get('project'),
+            helper.get_archive_name(self.get('code_uri'))
         )
-        properties['Environment']['Variables'].update(self.environment)
-        resource['DependsOn'].append(self.log_group.name)
-        resource['DependsOn'].extend(self.depends_on)
+        try_set_field(properties, 'Description', self.try_get('description'))
+        try_set_field(properties, 'Runtime',
+            self.try_get('runtime') or self.root.try_get('function_runtime'))
+        try_set_field(properties, 'Timeout',
+            self.try_get('timeout') or self.root.try_get('function_timeout'))
+        try_set_field(properties, 'Role', self.try_get('role'))
+        properties['Tags'].update(self.get_map('tags'))
+        properties['Environment']['Variables'].update(self.get_map('environment'))
+        if len(properties['Environment']['Variables']) == 0:
+            properties.pop('Environment')
+
+
+Root.RESOURCE_TYPES['function'] = Function
 
 
 class Policy(Base):
@@ -109,15 +149,16 @@ PolicyDocument:
 '''
 
     def __init__(self, name, statement):
+        super().__init__(None)
         self.name = name
         self.statement = statement
 
-    def _dump(self, resource):
-        resource['PolicyName'] = self.name
-        resource['PolicyDocument']['Statement'].extend(self.statement)
+    def _dump(self, template):
+        template['PolicyName'] = self.name
+        template['PolicyDocument']['Statement'].extend(self.statement)
 
 
-class LambdaRole(Base):
+class LambdaRole(BaseResource):
     TEMPLATE = \
 '''
 Type: AWS::IAM::Role
@@ -130,72 +171,95 @@ Properties:
           Service: lambda.amazonaws.com
         Action: sts:AssumeRole
   Path: /
-  RoleName: <RoleName>
   ManagedPolicyArns:
     - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
   Policies: []
+DependsOn: []
 '''
 
-    def __init__(self, name, source, root):
-        self.root = root
-        self.name = name
-        self.Properties = take_dict(source, 'Properties')
+    def init(self):
+        return [], []
 
-        self.role_name = Custom('!Sub', root.project + '-${AWS::Region}-' + name)
-        self.policies = [Policy(**obj) for obj in source['policies']]
+    def _dump(self, template):
+        super()._dump(template)
+        template['DependsOn'].extend(self.get_list('depends_on'))
 
-    def _dump(self, resource):
-        properties = resource['Properties']
-        properties.update(self.Properties)
-        properties['RoleName'] = self.role_name
-        policies = [policy.dump() for policy in self.policies]
+    def _dump_properties(self, properties):
+        properties['RoleName'] = Custom('!Sub',
+            self.root.get('project') + '-${AWS::Region}-' + self.name)
+        policies = [Policy(**policy).dump() for policy in self.get_list('policies')]
         properties['Policies'].extend(policies)
+
+
+Root.RESOURCE_TYPES['lambda-role'] = LambdaRole
 
 
 class LogGroup(Base):
     TEMPLATE = \
 '''
 Type: AWS::Logs::LogGroup
-Properties:
-  LogGroupName: <LogGroupName>
+Properties: {}
 '''
 
-    def __init__(self, name, root):
+    def __init__(self, name, lambda_name):
+        super().__init__(None)
         self.name = name + 'LogGroup'
-        self.group_name = helper.get_log_group_name(root, name)
+        self.group_name = '/aws/lambda/' + lambda_name
 
-    def _dump(self, resource):
-        resource['Properties']['LogGroupName'] = self.group_name
+    def _dump(self, template):
+        template['Properties']['LogGroupName'] = self.group_name
 
 
 class LambdaVersion(Base):
     TEMPLATE = \
 '''
 Type: AWS::Lambda::Version
-Properties:
-  FunctionName: <FunctionName>
+Properties: {}
 '''
 
     def __init__(self, name):
+        super().__init__(None)
         self.name = name + 'Version'
-        self.function_name = Custom('!Ref', name)
+        self.function_name = name
 
-    def _dump(self, resource):
-       resource['Properties']['FunctionName'] = self.function_name
+    def _dump(self, template):
+       template['Properties']['FunctionName'] = Custom('!Ref', self.function_name)
+
+
+class S3Bucket(BaseResource):
+    TEMPLATE = \
+'''
+Type: AWS::S3::Bucket
+Properties:
+  Tags: []
+'''
+
+    def init(self):
+        name = self.name
+
+        output_name = Output(name, Custom('!Ref', name))
+        output_url = Output(name + 'Url', Custom('!GetAtt', name + '.WebsiteURL'))
+
+        return [], [output_name, output_url]
+
+    def _dump_properties(self, properties):
+        tags = [{ 'Key': key, 'Value': value } for key, value in self.get_map('tags').items()]
+        properties['Tags'].extend(tags)
+
+
+Root.RESOURCE_TYPES['bucket'] = S3Bucket
 
 
 class Output(Base):
-    TEMPLATE = \
-'''
-Value: <Value>
-'''
+    TEMPLATE = '{}'
 
     def __init__(self, name, value):
+        super().__init__(None)
         self.name = name
         self.value = value
 
-    def _dump(self, resource):
-        resource['Value'] = self.value
+    def _dump(self, template):
+        template['Value'] = self.value
 
 
 def check_required_fields(source):
@@ -206,25 +270,11 @@ def check_required_fields(source):
     if len(absent) > 0:
         raise Exception('The following fields are not defined: {}'.format(', '.join(absent)))
 
-def process_resources(pattern, source):
-    for name, resource in source.items():
-        if resource['type'] == 'function':
-            function = Function(name, resource, pattern)
-            pattern.functions.append(function)
-            pattern.resources.append(function.log_group)
-            pattern.resources.append(function)
-            pattern.resources.append(function.version)
-            pattern.outputs.append(function.output_name)
-            pattern.outputs.append(function.output_version)
-        elif resource['type'] == 'lambda-role':
-            role = LambdaRole(name, resource, pattern)
-            pattern.resources.append(role)
-
 def create_pattern():
     source = load(helper.get_pattern_path())
     check_required_fields(source)
     root = Root(source)
-    process_resources(root, take_dict(source, 'resources'))
+    root.init()
     return root
 
 pattern = create_pattern()

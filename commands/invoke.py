@@ -1,5 +1,4 @@
 import json
-from utils import helper
 from utils.client import client
 from utils.pattern import pattern
 from utils.logger import log, logError
@@ -8,7 +7,11 @@ lambda_client = client('lambda')
 
 def run(name, payload=None):
     log('Invoking function')
-    full_name = helper.get_function_name(pattern, name)
+    try:
+        full_name = pattern.get_function(name).full_name
+    except:
+        log('Function *{}* is unknown.', name)
+        return 1
     kwargs = { 'FunctionName': full_name }
     if payload:
         kwargs['Payload'] = payload

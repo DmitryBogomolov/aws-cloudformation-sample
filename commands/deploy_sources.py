@@ -8,7 +8,7 @@ from utils.logger import log, logError
 s3_client = client('s3')
 
 def get_s3_key(pattern, name):
-    return pattern.project + '/' + name
+    return pattern.get('project') + '/' + name
 
 def run():
     log('Deploying sources')
@@ -18,7 +18,7 @@ def run():
         key = get_s3_key(pattern, archive_name)
         try:
             s3_client.upload_file(
-                helper.get_archive_path(archive_name), pattern.bucket, key)
+                helper.get_archive_path(archive_name), pattern.get('bucket'), key)
             log(' - {}', key)
         except S3UploadFailedError as err:
             logError(err)

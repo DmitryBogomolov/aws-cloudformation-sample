@@ -5,7 +5,7 @@ from utils.logger import log
 cf = client('cloudformation')
 
 def run():
-    ret = cf.describe_stacks(StackName=pattern.project)
+    ret = cf.describe_stacks(StackName=pattern.get('project'))
     stack = ret['Stacks'][0]
     log('Name: {}', stack['StackName'])
     log('Status: {}', stack['StackStatus'])

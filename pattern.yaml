@@ -111,3 +111,34 @@ resources:
     timeout: 15
     tags:
       Name: ComplexCalculate function
+
+  DataBucket:
+    type: bucket
+    tags:
+      Name: DataBucket s3 bucket
+
+  CheckBucketRole:
+    type: lambda-role
+    policies:
+      - name: CheckBucketPolicy
+        statement:
+          - Effect: Allow
+            Action: S3:PutObject*
+            Resource:
+              Fn::Sub:
+                - ${arn}/*
+                - { arn: !GetAtt DataBucket.Arn }
+    depends_on:
+      - DataBucket
+
+  CheckBucket:
+    type: function
+    description: Accesses s3 bucket.
+    handler: check_bucket.handler
+    code_uri: ./sources/check_bucket.py
+    role: !GetAtt CheckBucketRole.Arn
+    environment:
+      BUCKET: !Ref DataBucket
+    depends_on:
+      - CheckBucketRole
+      - DataBucket
