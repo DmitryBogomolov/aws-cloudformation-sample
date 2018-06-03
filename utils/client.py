@@ -3,10 +3,10 @@ from .pattern import pattern
 
 def make_session():
     kwargs = {}
-    profile = pattern.try_get('profile')
+    profile = pattern.get('profile', '')
     if profile:
         kwargs['profile_name'] = profile
-    region = pattern.try_get('region')
+    region = pattern.get('region', '')
     if region:
         kwargs['region_name'] = region
     return boto3.Session(**kwargs)

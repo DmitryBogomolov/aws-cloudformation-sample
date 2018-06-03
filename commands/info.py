@@ -13,5 +13,7 @@ def run():
     log('Description: {}', stack['Description'])
     log('Creation time: {}', stack['CreationTime'])
     log('Last update time: {}', stack['LastUpdatedTime'])
-    for obj in stack['Outputs']:
-        log('{} = {}', obj['OutputKey'], obj['OutputValue'])
+    log('')
+    for obj in sorted(list(stack['Outputs']), key=lambda obj: obj['OutputKey']):
+        log('{:32} {}', obj['OutputKey'], obj['OutputValue'])
+    log('')

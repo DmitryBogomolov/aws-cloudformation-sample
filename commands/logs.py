@@ -125,11 +125,11 @@ def print_event(event):
 
 def run(name):
     log('Getting logs')
-    try:
-        group_name = pattern.get_function(name).log_group.group_name
-    except:
-        log('Log group *{}* is unknown.', name)
+    function = pattern.get_function(name)
+    if not function:
+        log('Function *{}* is unknown.', name)
         return 1
+    group_name = function.log_group_name
     try:
         streams = logs_client.describe_log_streams(logGroupName=group_name)['logStreams']
     except logs_client.exceptions.ResourceNotFoundException:

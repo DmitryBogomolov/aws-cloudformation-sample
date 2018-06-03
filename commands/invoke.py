@@ -7,18 +7,17 @@ lambda_client = client('lambda')
 
 def run(name, payload=None):
     log('Invoking function')
-    try:
-        full_name = pattern.get_function(name).full_name
-    except:
+    function = pattern.get_function(name)
+    if not function:
         log('Function *{}* is unknown.', name)
         return 1
-    kwargs = { 'FunctionName': full_name }
+    kwargs = { 'FunctionName': function.full_name }
     if payload:
         kwargs['Payload'] = payload
     try:
         response = lambda_client.invoke(**kwargs)
     except lambda_client.exceptions.ResourceNotFoundException:
-        log('Function *{}* is not found.', full_name)
+        log('Function *{}* is not found.', function.full_name)
         return 1
     except Exception as e:
         logError(e)
