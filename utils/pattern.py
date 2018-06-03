@@ -118,19 +118,21 @@ Properties:
     def __init__(self, *args):
         super().__init__(*args)
         self.full_name = self.root.get('project') + '-' + self.name
+        self.log_group_name = '/aws/lambda/' + self.full_name
 
     def _dump(self, template, parent_template):
         super()._dump(template, parent_template)
 
         name = self.name
-        log_group = LogGroup(name, self.full_name)
-        version = LambdaVersion(name)
-        parent_template['Resources'][log_group.name] = log_group.dump()
-        parent_template['Resources'][version.name] = version.dump()
-        parent_template['Outputs'][name] = make_output(Custom('!Ref', name))
-        parent_template['Outputs'][version.name] = make_output(Custom('!Ref', version.name))
+        log_name = name + 'LogGroup'
+        version_name = name + 'Version'
+        LogGroup(log_name, { 'group_name': self.log_group_name }, self.root).dump(parent_template)
+        LambdaVersion(version_name, { 'function': name }, self.root).dump(parent_template)
 
-        template['DependsOn'].append(log_group.name)
+        parent_template['Outputs'][name] = make_output(Custom('!Ref', name))
+        parent_template['Outputs'][version_name] = make_output(Custom('!Ref', version_name))
+
+        template['DependsOn'].append(log_name)
 
     def _dump_properties(self, properties):
         properties['FunctionName'] = self.full_name
@@ -200,36 +202,30 @@ Properties:
 Root.RESOURCE_TYPES['lambda-role'] = LambdaRole
 
 
-class LogGroup(Base):
+class LogGroup(BaseResource):
     TEMPLATE = \
 '''
 Type: AWS::Logs::LogGroup
 Properties: {}
 '''
 
-    def __init__(self, name, lambda_name):
-        super().__init__(None)
-        self.name = name + 'LogGroup'
-        self.group_name = '/aws/lambda/' + lambda_name
-
-    def _dump(self, template):
-        template['Properties']['LogGroupName'] = self.group_name
+    def _dump_properties(self, properties):
+        properties['LogGroupName'] = self.get('group_name')
 
 
-class LambdaVersion(Base):
+class LambdaVersion(BaseResource):
     TEMPLATE = \
 '''
 Type: AWS::Lambda::Version
 Properties: {}
 '''
 
-    def __init__(self, name):
-        super().__init__(None)
-        self.name = name + 'Version'
-        self.function_name = name
+    def _dump(self, template, parent_template):
+        super()._dump(template, parent_template)
+        template['DependsOn'].append(self.get('function'))
 
-    def _dump(self, template):
-       template['Properties']['FunctionName'] = Custom('!Ref', self.function_name)
+    def _dump_properties(self, properties):
+       properties['FunctionName'] = Custom('!Ref', self.get('function'))
 
 
 def set_tags_list(template, resource):
