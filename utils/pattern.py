@@ -33,6 +33,9 @@ def try_set_field(target, name, value):
     if value:
         target[name] = value
 
+def sanitize_resource_name(name):
+    return name.title().replace('-', '').replace('_', '')
+
 
 class Root(Base):
     TEMPLATE = \
@@ -456,18 +459,12 @@ DependsOn: []
 
     def _setup_autoscaling(self, parent_template):
         name = self.name
-        root = self.root
         role_name = name + 'ScalingRole'
+        count = 0
         read_capacity = self.get_path('autoscaling.read_capacity')
         write_capacity = self.get_path('autoscaling.write_capacity')
-        if read_capacity or write_capacity:
-            DynamoDBScalingRole(
-                name=role_name,
-                source={},
-                root=root,
-                table=name
-            ).dump(parent_template)
         if read_capacity:
+            count += 1
             self._setup_autoscaling_item(parent_template,
                 target='ReadScalableTarget',
                 source=read_capacity,
@@ -478,6 +475,7 @@ DependsOn: []
                 metric='DynamoDBReadCapacityUtilization'
             )
         if write_capacity:
+            count += 1
             self._setup_autoscaling_item(parent_template,
                 target='WriteScalableTarget',
                 source=write_capacity,
@@ -487,6 +485,41 @@ DependsOn: []
                 policy='WriteScalingPolicy',
                 metric='DynamoDBWriteCapacityUtilization'
             )
+        for obj in self.get('global_secondary_indexes', []):
+            wrapper = Base(obj)
+            index_name = wrapper.get('index_name')
+            safe_index_name = sanitize_resource_name(index_name)
+            index_read_capacity = wrapper.get_path('autoscaling.read_capacity')
+            index_write_capacity = wrapper.get_path('autoscaling.write_capacity')
+            if index_read_capacity:
+                count += 1
+                self._setup_autoscaling_item(parent_template,
+                    target=safe_index_name + 'ReadScalableTarget',
+                    source=index_read_capacity,
+                    resource='table/${table}/index/' + index_name,
+                    dimension='dynamodb:index:ReadCapacityUnits',
+                    role=role_name,
+                    policy=safe_index_name + 'ReadScalingPolicy',
+                    metric='DynamoDBReadCapacityUtilization'
+                )
+            if index_write_capacity:
+                count += 1
+                self._setup_autoscaling_item(parent_template,
+                    target=safe_index_name + 'WriteScalableTarget',
+                    source=index_write_capacity,
+                    resource='table/${table}/index/' + index_name,
+                    dimension='dynamodb:index:WriteCapacityUnits',
+                    role=role_name,
+                    policy=safe_index_name + 'WriteScalingPolicy',
+                    metric='DynamoDBWriteCapacityUtilization'
+                )
+        if count > 0:
+            DynamoDBScalingRole(
+                name=role_name,
+                source={},
+                root=self.root,
+                table=name
+            ).dump(parent_template)
 
 
 Root.RESOURCE_TYPES['dynamodb-table'] = DynamoDBTable
