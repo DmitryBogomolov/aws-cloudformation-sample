@@ -192,3 +192,26 @@ resources:
             max: 5
     tags:
       Name: Test table
+
+  CheckTableRole:
+    type: lambda-role
+    policies:
+      - name: CheckTablePolicy
+        statement:
+          - Effect: Allow
+            Action: dynamodb:*
+            Resource: !GetAtt DataTable.Arn
+    depends_on:
+      - DataTable
+
+  CheckTable:
+    type: function
+    description: Accesses dynamodb table.
+    handler: check_table.handler
+    code_uri: ./sources/check_table.py
+    role: !GetAtt CheckTableRole.Arn
+    environment:
+      TABLE: !Ref DataTable
+    depends_on:
+      - CheckTableRole
+      - DataTable
