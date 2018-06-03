@@ -86,14 +86,20 @@ class BaseResource(Base):
     def _dump(self, template, parent_template):
         properties = template['Properties']
         properties.update(self.get('Properties', {}))
+
+        # The following allows to avoid declaring "DependsOn: []" in every TEMPLATE field.
+        depends_on = template.get('DependsOn')
+        if not depends_on:
+            depends_on = []
+            template['DependsOn'] = depends_on
+        depends_on.extend(self.get('DependsOn', []))
+        depends_on.extend(self.get('depends_on', []))
         self._dump_properties(properties)
+
 
     def _dump_properties(self, properties):
         raise Exception('Not implemented')
 
-
-def set_depends_on(template, resource):
-    template['DependsOn'].extend(resource.get('depends_on', []))
 
 def make_output(value):
     return { 'Value': value }
@@ -107,7 +113,6 @@ Properties:
   Environment:
     Variables: {}
   Tags: {}
-DependsOn: []
 '''
 
     def __init__(self, *args):
@@ -126,7 +131,6 @@ DependsOn: []
         parent_template['Outputs'][version.name] = make_output(Custom('!Ref', version.name))
 
         template['DependsOn'].append(log_group.name)
-        set_depends_on(template, self)
 
     def _dump_properties(self, properties):
         properties['FunctionName'] = self.full_name
@@ -185,12 +189,7 @@ Properties:
   ManagedPolicyArns:
     - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
   Policies: []
-DependsOn: []
 '''
-
-    def _dump(self, template, parent_template):
-        super()._dump(template, parent_template)
-        set_depends_on(template, self)
 
     def _dump_properties(self, properties):
         properties['RoleName'] = Custom('!Sub',
@@ -406,7 +405,6 @@ Properties:
   LocalSecondaryIndexes: []
   GlobalSecondaryIndexes: []
   Tags: []
-DependsOn: []
 '''
 
     def _dump(self, template, parent_template):
@@ -414,7 +412,6 @@ DependsOn: []
         name = self.name
         parent_template['Outputs'][name] = make_output(Custom('!Ref', name))
         parent_template['Outputs'][name + 'Arn'] = make_output(Custom('!GetAtt', name + '.Arn'))
-        set_depends_on(template, self)
         self._setup_autoscaling(parent_template)
 
     def _dump_properties(self, properties):
