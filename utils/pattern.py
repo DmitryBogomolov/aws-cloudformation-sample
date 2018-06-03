@@ -314,6 +314,11 @@ Properties:
         super().__init__(name, source, root)
         self._args = kwargs
 
+    def _dump(self, template, parent_template):
+        super()._dump(template, parent_template)
+        template['DependsOn'].append(self._args['table'])
+        template['DependsOn'].append(self._args['role'])
+
     def _dump_properties(self, properties):
         properties['ScalableDimension'] = self._args['dimension']
         properties['RoleARN'] = Custom('!GetAtt', self._args['role'] + '.Arn')
@@ -344,6 +349,11 @@ Properties:
     def __init__(self, name, source, root, **kwargs):
         super().__init__(name, source, root)
         self._args = kwargs
+
+    def _dump(self, template, parent_template):
+        super()._dump(template, parent_template)
+        template['DependsOn'].append(self._args['table'])
+        template['DependsOn'].append(self._args['target'])
 
     def _dump_properties(self, properties):
         properties['PolicyName'] = self._args['policy_name']
@@ -449,6 +459,7 @@ Properties:
             name=policy_name,
             source={},
             root=self.root,
+            table=name,
             policy_name=policy_name,
             metric_type=kwargs['metric'],
             target=target_name
