@@ -33,7 +33,7 @@ resources:
       Name: DoLongTask function
 
   InvokeCalculateRole:
-    type: lambda-role
+    type: function-role
     policies:
       - name: invoke_calculate_policy
         statement:
@@ -57,7 +57,7 @@ resources:
       - InvokeCalculateRole
 
   InvokeRaiseErrorRole:
-    type: lambda-role
+    type: function-role
     policies:
       - name: InvokeRaiseErrorPolicy
         statement:
@@ -80,7 +80,7 @@ resources:
       - InvokeRaiseErrorRole
 
   InvokeDoLongTaskRole:
-    type: lambda-role
+    type: function-role
     policies:
       - name: InvokeDoLongTaskPolicy
         statement:
@@ -118,7 +118,7 @@ resources:
       Name: DataBucket s3 bucket
 
   CheckBucketRole:
-    type: lambda-role
+    type: function-role
     policies:
       - name: CheckBucketPolicy
         statement:
@@ -194,7 +194,7 @@ resources:
       Name: Test table
 
   CheckTableRole:
-    type: lambda-role
+    type: function-role
     policies:
       - name: CheckTablePolicy
         statement:
