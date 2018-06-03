@@ -143,7 +143,7 @@ resources:
       - CheckBucketRole
       - DataBucket
 
-  Table:
+  DataTable:
     type: dynamodb-table
     table_name: my-test-table-1
     attribute_definitions:
@@ -159,6 +159,13 @@ resources:
       write_capacity_units: 5
     stream_specification:
       stream_view_type: NEW_IMAGE
+    autoscaling:
+      read_capacity:
+        min: 5
+        max: 50
+      write_capacity:
+        min: 5
+        max: 50
     local_secondary_indexes:
       - index_name: test-local-index
         key_schema:
@@ -176,5 +183,12 @@ resources:
         provisioned_throughput:
           read_capacity_units: 1
           write_capacity_units: 1
+        autoscaling:
+          read_capacity:
+            min: 1
+            max: 5
+          write_capacity:
+            min: 1
+            max: 5
     tags:
       Name: Test table

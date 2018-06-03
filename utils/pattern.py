@@ -299,6 +299,98 @@ ProvisionedThroughput: {}
         set_throughput(template, self)
 
 
+class DynamoDBScalableTarget(BaseResource):
+    TEMPLATE = \
+'''
+Type: AWS::ApplicationAutoScaling::ScalableTarget
+Properties:
+  ScalableDimension: dynamodb:table:WriteCapacityUnits
+  ServiceNamespace: dynamodb
+'''
+
+    def __init__(self, name, source, root, **kwargs):
+        super().__init__(name, source, root)
+        self._args = kwargs
+
+    def _dump_properties(self, properties):
+        properties['ScalableDimension'] = self._args['dimension']
+        properties['RoleARN'] = Custom('!GetAtt', self._args['role'] + '.Arn')
+        properties['ResourceId'] = {
+            'Fn::Sub': [
+                self._args['resource'],
+                { 'table': Custom('!Ref', self._args['table']) }
+            ]
+        }
+        properties['MinCapacity'] = self.get('min')
+        properties['MaxCapacity'] = self.get('max')
+
+
+class DynamoDBScalingPolicy(BaseResource):
+    TEMPLATE = \
+'''
+Type: AWS::ApplicationAutoScaling::ScalingPolicy
+Properties:
+  PolicyType: TargetTrackingScaling
+  TargetTrackingScalingPolicyConfiguration:
+    TargetValue: 50.0
+    ScaleInCooldown: 60
+    ScaleOutCooldown: 60
+    PredefinedMetricSpecification:
+      PredefinedMetricType: DynamoDBWriteCapacityUtilization
+'''
+
+    def __init__(self, name, source, root, **kwargs):
+        super().__init__(name, source, root)
+        self._args = kwargs
+
+    def _dump_properties(self, properties):
+        properties['PolicyName'] = self._args['policy_name']
+        properties['TargetTrackingScalingPolicyConfiguration'][
+            'PredefinedMetricSpecification']['PredefinedMetricType'] = self._args['metric_type']
+        properties['ScalingTargetId'] = Custom('!Ref', self._args['target'])
+
+
+class DynamoDBScalingRole(BaseResource):
+    TEMPLATE = \
+'''
+Type: AWS::IAM::Role
+Properties:
+  AssumeRolePolicyDocument:
+    Version: 2012-10-17
+    Statement:
+      - Effect: Allow
+        Principal:
+          Service: application-autoscaling.amazonaws.com
+        Action: sts:AssumeRole
+  Path: /
+  Policies:
+    - PolicyName: root
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:DescribeTable
+              - dynamodb:UpdateTable
+          - Effect: Allow
+            Action:
+              - cloudwatch:PutMetricAlarm
+              - cloudwatch:DescribeAlarms
+              - cloudwatch:GetMetricStatistics
+              - cloudwatch:SetAlarmState
+              - cloudwatch:DeleteAlarms
+            Resource: '*'
+'''
+
+    def __init__(self, name, source, root, **kwargs):
+        super().__init__(name, source, root)
+        self._args = kwargs
+
+    def _dump_properties(self, properties):
+        properties['Policies'][0]['PolicyDocument']['Statement'][0]['Resource'] = Custom(
+            '!GetAtt', self._args['table'] + '.Arn')
+
+
 class DynamoDBTable(BaseResource):
     TEMPLATE = \
 '''
@@ -320,6 +412,7 @@ DependsOn: []
         parent_template['Outputs'][name] = make_output(Custom('!Ref', name))
         parent_template['Outputs'][name + 'Arn'] = make_output(Custom('!GetAtt', name + '.Arn'))
         set_depends_on(template, self)
+        self._setup_autoscaling(parent_template)
 
     def _dump_properties(self, properties):
         properties['TableName'] = self.get('table_name')
@@ -338,6 +431,62 @@ DependsOn: []
         set_sub_list(properties['GlobalSecondaryIndexes'],
             self, 'global_secondary_indexes', GlobalSecondaryIndex)
         set_tags_list(properties, self)
+
+    def _setup_autoscaling_item(self, parent_template, **kwargs):
+        name = self.name
+        target_name = name + kwargs['target']
+        DynamoDBScalableTarget(
+            name=target_name,
+            source=kwargs['source'],
+            root=self.root,
+            table=name,
+            resource=kwargs['resource'],
+            dimension=kwargs['dimension'],
+            role=kwargs['role']
+        ).dump(parent_template)
+        policy_name = name + kwargs['policy']
+        DynamoDBScalingPolicy(
+            name=policy_name,
+            source={},
+            root=self.root,
+            policy_name=policy_name,
+            metric_type=kwargs['metric'],
+            target=target_name
+        ).dump(parent_template)
+
+    def _setup_autoscaling(self, parent_template):
+        name = self.name
+        root = self.root
+        role_name = name + 'ScalingRole'
+        read_capacity = self.get_path('autoscaling.read_capacity')
+        write_capacity = self.get_path('autoscaling.write_capacity')
+        if read_capacity or write_capacity:
+            DynamoDBScalingRole(
+                name=role_name,
+                source={},
+                root=root,
+                table=name
+            ).dump(parent_template)
+        if read_capacity:
+            self._setup_autoscaling_item(parent_template,
+                target='ReadScalableTarget',
+                source=read_capacity,
+                resource='table/${table}',
+                dimension='dynamodb:table:ReadCapacityUnits',
+                role=role_name,
+                policy='ReadScalingPolicy',
+                metric='DynamoDBReadCapacityUtilization'
+            )
+        if write_capacity:
+            self._setup_autoscaling_item(parent_template,
+                target='WriteScalableTarget',
+                source=write_capacity,
+                resource='table/${table}',
+                dimension='dynamodb:table:WriteCapacityUnits',
+                role=role_name,
+                policy='WriteScalingPolicy',
+                metric='DynamoDBWriteCapacityUtilization'
+            )
 
 
 Root.RESOURCE_TYPES['dynamodb-table'] = DynamoDBTable
