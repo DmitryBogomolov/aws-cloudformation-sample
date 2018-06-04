@@ -238,3 +238,12 @@ resources:
     type: apigateway
     name: api-gateway-1
     stage: dev1
+    endpoints:
+      - path: GET /
+        function: ProcessApiRequest
+      - path: GET /test1/{proxy+}
+        function: ProcessApiRequest
+      - path: GET /test2/get/{name}
+        function: ProcessApiRequest
+      - path: POST /test2/post/{value}
+        function: ProcessApiRequest
