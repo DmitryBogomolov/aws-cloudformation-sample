@@ -41,7 +41,26 @@ Properties:
             self.get('function') + '.Arn')
 
 
-class ApiGatewayS3ProxyRole(BaseResource):
+class ApiGatewayPermission(BaseResource):
+    TEMPLATE = \
+'''
+Type: AWS::Lambda::Permission
+Properties:
+  FunctionName: !GetAtt ProcessApiRequest.Arn
+  Action: lambda:InvokeFunction
+  Principal: !Sub apigateway.${AWS::URLSuffix}
+  SourceArn:
+    Fn::Sub:
+      - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${api}/*/*
+      - {}
+'''
+
+    def _dump_properties(self, properties):
+        properties['FunctionName'] = Custom('!GetAtt', self.get('function') + '.Arn')
+        properties['SourceArn']['Fn::Sub'][1]['api'] = Custom('!Ref', self.get('rest_api'))
+
+
+class ApiGatewayS3ObjectRole(BaseResource):
     TEMPLATE = \
 '''
 Type: AWS::IAM::Role
@@ -104,10 +123,13 @@ Properties:
         properties['Integration']['Uri']['Fn::Sub'][1]['bucket'] = self.get('bucket')
         properties['Integration']['Credentials'] = Custom('!GetAtt',
             self.get('role_resource') + '.Arn')
-        parameter_name = self.get('parameter')
-        properties['RequestParameters']['method.request.path.' + parameter_name] = True
-        properties['Integration']['RequestParameters'][
-            'integration.request.path.' + parameter_name] = 'method.request.path.' + parameter_name
+        params = filter(None, map(to_param_part, filter(None, self.get('url').split('/'))))
+        request_params = properties['RequestParameters']
+        integration_request_params = properties['Integration']['RequestParameters']
+        for param in params:
+            name = 'method.request.path.' + param
+            request_params[name] = True
+            integration_request_params['integration.request.path.' + param] = name
 
 
 class ApiGatewayDeployment(BaseResource):
@@ -126,25 +148,8 @@ Properties: {}
         properties['StageName'] = self.get('stage')
 
 
-class ApiGatewayPermission(BaseResource):
-    TEMPLATE = \
-'''
-Type: AWS::Lambda::Permission
-Properties:
-  FunctionName: !GetAtt ProcessApiRequest.Arn
-  Action: lambda:InvokeFunction
-  Principal: !Sub apigateway.${AWS::URLSuffix}
-  SourceArn:
-    Fn::Sub:
-      - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${api}/*/*
-      - {}
-'''
-
-    def _dump_properties(self, properties):
-        properties['FunctionName'] = Custom('!GetAtt', self.get('function') + '.Arn')
-        properties['SourceArn']['Fn::Sub'][1]['api'] = Custom('!Ref', self.get('rest_api'))
-
-
+def to_param_part(part):
+    return part[1:-1] if part[0] == '{' and part[-1] == '}' else ''
 
 def get_resource(url, resources):
     if url in resources:
@@ -153,13 +158,13 @@ def get_resource(url, resources):
     part = url[index + 1:]
     parent_url = url[:index]
     parent = get_resource(parent_url, resources)
-    name = part
-    if name == '{proxy+}':
+    name = to_param_part(part)
+    if name == 'proxy+':
         name = 'ProxyVar'
-    elif name[0] == '{' and name[-1] == '}':
-        name = name[1:-1].title() + 'Var'
+    elif name:
+        name = name.title() + 'Var'
     else:
-        name = name.title()
+        name = part.title()
     resource = { 'name': parent['name'] + name, 'part': part, 'parent': parent_url }
     resources[url] = resource
     return resource
@@ -203,29 +208,33 @@ Properties:
             http_method, url = endpoint['path'].split()
             url = url.rstrip('/')
             resource = get_resource(url, resources)
-            urls.append(http_method + ' ' + (url or '/'))
+            urls.append('{:4} {}'.format(http_method, url or '/'))
             method_name = name + 'Method' + resource['name'] + http_method.title()
             methods.append(method_name)
+            resource_id = build_resource_id(resource['name'], name)
             if 'function' in endpoint:
                 function = endpoint['function']
                 functions.add(function)
                 ApiGatewayFunctionMethod(method_name, {
-                    'function': function,
-                    'http_method': http_method,
-                    'resource': build_resource_id(resource['name'], name),
+                    'resource': resource_id,
                     'rest_api': name,
+                    'http_method': http_method,
+                    'function': function
                 }, root).dump(parent_template)
             elif 'bucket' in endpoint:
+                # To simplify role actions list - s3:GetObject.
+                if http_method != 'GET':
+                    raise ValueError('{} - only GET is allowed'.format(url))
                 role_name = method_name + 'Role'
-                ApiGatewayS3ProxyRole(role_name, {
+                ApiGatewayS3ObjectRole(role_name, {
                     'bucket': endpoint['role_resource']
                 }, root).dump(parent_template)
                 ApiGatewayBucketMethod(method_name, {
-                    'resource': build_resource_id(resource['name'], name),
+                    'resource': resource_id,
                     'rest_api': name,
                     'role_resource': role_name,
                     'bucket': endpoint['bucket'],
-                    'parameter': resource['part'][1:-1]
+                    'url': url
                 }, root).dump(parent_template)
         for obj in resources.values():
             if not obj['name']:
