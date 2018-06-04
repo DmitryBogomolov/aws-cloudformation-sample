@@ -16,7 +16,7 @@ Properties: {}
         properties['RestApiId'] = Custom('!Ref', self.get('rest_api'))
 
 
-class ApiGatewayMethod(BaseResource):
+class ApiGatewayFunctionMethod(BaseResource):
     TEMPLATE = \
 '''
 Type: AWS::ApiGateway::Method
@@ -39,6 +39,75 @@ Properties:
         properties['RestApiId'] = Custom('!Ref', self.get('rest_api'))
         properties['Integration']['Uri']['Fn::Sub'][1]['func'] = Custom('!GetAtt',
             self.get('function') + '.Arn')
+
+
+class ApiGatewayS3ProxyRole(BaseResource):
+    TEMPLATE = \
+'''
+Type: AWS::IAM::Role
+Properties:
+  AssumeRolePolicyDocument:
+    Version: '2012-10-17'
+    Statement:
+      - Effect: Allow
+        Principal:
+          Service: apigateway.amazonaws.com
+        Action: sts:AssumeRole
+  Policies:
+  - PolicyDocument:
+      Version: '2012-10-17'
+      Statement:
+        - Effect: Allow
+          Action: s3:GetObject
+          Resource:
+            Fn::Sub:
+              - arn:aws:s3:::${bucket}
+              - {}
+'''
+
+    def _dump_properties(self, properties):
+        properties['Policies'][0]['PolicyName'] = self.name + 'Policy'
+        properties['Policies'][0]['PolicyDocument']['Statement'][0][
+            'Resource']['Fn::Sub'][1]['bucket'] = self.get('bucket')
+
+
+class ApiGatewayBucketMethod(BaseResource):
+    TEMPLATE = \
+'''
+Type: AWS::ApiGateway::Method
+Properties:
+  RequestParameters:
+    method.request.header.Content-Disposition: false
+    method.request.header.Content-Type: false
+  AuthorizationType: NONE
+  HttpMethod: GET
+  MethodResponses:
+    - StatusCode: 200
+  Integration:
+    IntegrationHttpMethod: GET
+    Type: AWS
+    Uri:
+      Fn::Sub:
+        - arn:aws:apigateway:${AWS::Region}:s3:path/${bucket}
+        - {}
+    PassthroughBehavior: WHEN_NO_MATCH
+    RequestParameters:
+      integration.request.header.Content-Disposition: method.request.header.Content-Disposition
+      integration.request.header.Content-Type: method.request.header.Content-Type
+    IntegrationResponses:
+      - StatusCode: 200
+'''
+
+    def _dump_properties(self, properties):
+        properties['ResourceId'] = self.get('resource')
+        properties['RestApiId'] = Custom('!Ref', self.get('rest_api'))
+        properties['Integration']['Uri']['Fn::Sub'][1]['bucket'] = self.get('bucket')
+        properties['Integration']['Credentials'] = Custom('!GetAtt',
+            self.get('role_resource') + '.Arn')
+        parameter_name = self.get('parameter')
+        properties['RequestParameters']['method.request.path.' + parameter_name] = True
+        properties['Integration']['RequestParameters'][
+            'integration.request.path.' + parameter_name] = 'method.request.path.' + parameter_name
 
 
 class ApiGatewayDeployment(BaseResource):
@@ -135,16 +204,29 @@ Properties:
             url = url.rstrip('/')
             resource = get_resource(url, resources)
             urls.append(http_method + ' ' + (url or '/'))
-            function = endpoint['function']
-            functions.add(function)
             method_name = name + 'Method' + resource['name'] + http_method.title()
             methods.append(method_name)
-            ApiGatewayMethod(method_name, {
-                'function': function,
-                'http_method': http_method,
-                'resource': build_resource_id(resource['name'], name),
-                'rest_api': name,
-            }, root).dump(parent_template)
+            if 'function' in endpoint:
+                function = endpoint['function']
+                functions.add(function)
+                ApiGatewayFunctionMethod(method_name, {
+                    'function': function,
+                    'http_method': http_method,
+                    'resource': build_resource_id(resource['name'], name),
+                    'rest_api': name,
+                }, root).dump(parent_template)
+            elif 'bucket' in endpoint:
+                role_name = method_name + 'Role'
+                ApiGatewayS3ProxyRole(role_name, {
+                    'bucket': endpoint['role_resource']
+                }, root).dump(parent_template)
+                ApiGatewayBucketMethod(method_name, {
+                    'resource': build_resource_id(resource['name'], name),
+                    'rest_api': name,
+                    'role_resource': role_name,
+                    'bucket': endpoint['bucket'],
+                    'parameter': resource['part'][1:-1]
+                }, root).dump(parent_template)
         for obj in resources.values():
             if not obj['name']:
                 continue

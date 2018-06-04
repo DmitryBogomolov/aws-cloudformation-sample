@@ -247,3 +247,6 @@ resources:
         function: ProcessApiRequest
       - path: POST /test2/post/{value}
         function: ProcessApiRequest
+      - path: GET /test3/{file}
+        role_resource: my-aws-buckets/mytestapp1/*
+        bucket: my-aws-buckets/mytestapp1/{file}
