@@ -215,3 +215,38 @@ resources:
     depends_on:
       - CheckTableRole
       - DataTable
+
+    CheckTable:
+    type: function
+    description: Accesses dynamodb table.
+    handler: check_table.handler
+    code_uri: ./sources/check_table.py
+    role: !GetAtt CheckTableRole.Arn
+    environment:
+      TABLE: !Ref DataTable
+    depends_on:
+      - CheckTableRole
+      - DataTable
+
+  ProcessApiRequest:
+    type: function
+    description: Handles http requests.
+    handler: process_api_request.handler
+    code_uri: ./sources/process_api_request.py
+
+  TestApiGateway:
+    type: apigateway
+    name: api-gateway-1
+    stage: dev1
+    endpoints:
+      - path: GET /
+        function: ProcessApiRequest
+      - path: GET /test1/{proxy+}
+        function: ProcessApiRequest
+      - path: GET /test2/get/{name}
+        function: ProcessApiRequest
+      - path: POST /test2/post/{value}
+        function: ProcessApiRequest
+      - path: GET /test3/{file}
+        role_resource: my-aws-buckets/mytestapp1/*
+        bucket: my-aws-buckets/mytestapp1/{file}
