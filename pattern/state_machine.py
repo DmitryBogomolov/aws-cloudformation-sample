@@ -1,6 +1,6 @@
 import json
 from utils.yaml import Custom
-from .utils import make_output
+from .utils import make_output, try_set_field
 from .base_resource import BaseResource
 
 class StateMachineRole(BaseResource):
@@ -34,34 +34,23 @@ Properties:
 def get_role_name(name):
     return name + 'Role'
 
-def build_definition(states, start_at, comment):
-    pass
+def patch_state_resources(states, functions, args):
+    for state in states.values():
+        if state['Type'] == 'Task':
+            function = state['Resource']
+            state['Resource'] = '${' + function + '}'
+            args[function] = Custom('!GetAtt', function + '.Arn')
+            functions.add(function)
+        elif state['Type'] == 'Parallel':
+            for branch in state['Branches']:
+                patch_state_resources(branch['States'], functions, args)
 
 
 class StateMachine(BaseResource):
     TEMPLATE = \
 '''
 Type: AWS::StepFunctions::StateMachine
-Properties:
-  DefinitionString:
-    Fn::Sub:
-      - |-
-        {
-          "Comment": "This is a comment",
-          "StartAt": "state-1",
-          "States": {
-            "state-1": {
-              "Type": "Task",
-              "Resource": "${DoStateAction}",
-              "Next": "end"
-            },
-            "end": {
-              "Type": "Pass",
-              "End": true
-            }
-          }
-        }
-      - { DoStateAction: !GetAtt DoStateAction.Arn }
+Properties: {}
 '''
 
     TYPE = 'state-machine'
@@ -70,21 +59,15 @@ Properties:
         super()._dump(template, parent_template)
         name = self.name
 
-        states = {}
+        states = self.get('states')
         functions = set()
         args = {}
-        for state_name, state in self.get('states').items():
-            if state['Type'] == 'Task':
-                function = state['Resource']
-                state['Resource'] = '${' + function + '}'
-                args[function] = Custom('!GetAtt', function + '.Arn')
-                functions.add(function)
-            states[state_name] = state
+        patch_state_resources(states, functions, args)
         definition = {
-            'Comment': self.get('comment'),
             'StartAt': self.get('start_at'),
             'States': states
         }
+        try_set_field(definition, 'Comment', self.get('comment', ''))
 
         template['Properties']['DefinitionString'] = {
             'Fn::Sub': [

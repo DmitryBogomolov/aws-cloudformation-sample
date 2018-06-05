@@ -256,19 +256,48 @@ resources:
     description: Does test action for state machine state.
     handler: do_state_action.handler
     code_uri: ./sources/do_state_action.py
-    environment:
-      DATA: '"Hello"'
     tags:
       Name: DoStateAction function
 
   StateMachine:
     type: state-machine
     comment: This is a comment
-    start_at: state-1
+    start_at: start
     states:
-      state-1:
+      start:
+        Type: Pass
+        ResultPath: $.notes
+        Result:
+          started: true
+        Next:
+          check-input
+      check-input:
+        Type: Choice
+        Choices:
+          - Variable: $.count
+            NumericLessThanEquals: 0
+            Next: set-error
+        Default: calculate
+      set-error:
+        Type: Pass
+        ResultPath: $.error
+        Result:
+          message: '"count" is out of range'
+        End: true
+      calculate:
         Type: Task
         Resource: DoStateAction
-        Next: end
+        Next: check-value
+      check-value:
+        Type: Choice
+        Choices:
+          - Variable: $.count
+            NumericGreaterThan: 0
+            Next: calculate
+        Default: end
       end:
-        Type: Succeed
+        Type: Pass
+        ResultPath: $.notes
+        Result:
+          ended: true
+        End: true
