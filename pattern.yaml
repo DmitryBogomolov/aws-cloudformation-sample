@@ -236,7 +236,6 @@ resources:
 
   TestApiGateway:
     type: apigateway
-    name: api-gateway-1
     stage: dev1
     endpoints:
       - path: GET /

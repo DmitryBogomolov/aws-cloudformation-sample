@@ -1,5 +1,5 @@
 from utils.yaml import Custom
-from .utils import make_output
+from .utils import get_full_name, make_output
 from .base_resource import BaseResource
 
 
@@ -281,4 +281,4 @@ Properties:
             outputs[name + 'Path' + str(i + 1)] = make_output(url)
 
     def _dump_properties(self, properties):
-        properties['Name'] = self.get('name')
+        properties['Name'] = get_full_name(self.name, self.root)
