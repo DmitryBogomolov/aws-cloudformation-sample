@@ -266,7 +266,7 @@ resources:
     states:
       start:
         Type: Pass
-        ResultPath: $.notes
+        ResultPath: $.start-status
         Result:
           started: true
         Next:
@@ -274,7 +274,7 @@ resources:
       check-input:
         Type: Choice
         Choices:
-          - Variable: $.count
+          - Variable: $.data.count
             NumericLessThanEquals: 0
             Next: set-error
         Default: calculate
@@ -287,17 +287,19 @@ resources:
       calculate:
         Type: Task
         Resource: DoStateAction
+        InputPath: $.data
+        ResultPath: $.data
         Next: check-value
       check-value:
         Type: Choice
         Choices:
-          - Variable: $.count
+          - Variable: $.data.count
             NumericGreaterThan: 0
             Next: calculate
         Default: end
       end:
         Type: Pass
-        ResultPath: $.notes
+        ResultPath: $.end-status
         Result:
           ended: true
         End: true

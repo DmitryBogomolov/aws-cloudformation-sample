@@ -22,7 +22,6 @@ Properties:
         Statement:
           - Effect: Allow
             Action: lambda:InvokeFunction
-            Resource: '*'
 '''
 
     def _dump_properties(self, properties):
@@ -69,6 +68,7 @@ Properties: {}
         }
         try_set_field(definition, 'Comment', self.get('comment', ''))
 
+        # It is done here (not in `_dump_properties`) to pass list of functions to role.
         template['Properties']['DefinitionString'] = {
             'Fn::Sub': [
                 json.dumps(definition, indent=2),
