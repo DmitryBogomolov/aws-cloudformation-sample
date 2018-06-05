@@ -251,6 +251,24 @@ resources:
   #       role_resource: my-aws-buckets/mytestapp1/*
   #       bucket: my-aws-buckets/mytestapp1/{file}
 
+  DoStateAction:
+    type: function
+    description: Does test action for state machine state.
+    handler: do_state_action.handler
+    code_uri: ./sources/do_state_action.py
+    environment:
+      DATA: '"Hello"'
+    tags:
+      Name: DoStateAction function
+
   StateMachine:
     type: state-machine
-    name: state-machine-1
+    comment: This is a comment
+    start_at: state-1
+    states:
+      state-1:
+        Type: Task
+        Resource: DoStateAction
+        Next: end
+      end:
+        Type: Succeed
