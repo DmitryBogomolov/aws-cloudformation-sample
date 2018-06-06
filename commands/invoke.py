@@ -31,5 +31,5 @@ def run(name, payload=None):
             for file_name, line, func, code in stack_trace:
                 log('  {}, {}, in {}', file_name, line, func)
                 log('    {}', code)
-        return
+        return 1
     log(json.dumps(payload, indent=2))
