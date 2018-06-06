@@ -23,4 +23,5 @@ def run():
         except S3UploadFailedError as err:
             logError(err)
             has_error = True
-    return 1 if has_error else 0
+    if has_error:
+        return 1
