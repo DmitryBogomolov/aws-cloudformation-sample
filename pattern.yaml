@@ -7,249 +7,249 @@ function_runtime: python3.6
 function_timeout: 5
 
 resources:
-  # Calculate:
-  #   type: function
-  #   description: Performs test calculation.
-  #   handler: calculate.handler
-  #   code_uri: ./sources/calculate.py
-  #   tags:
-  #     Name: Calculate function
+  Calculate:
+    type: function
+    description: Performs test calculation.
+    handler: calculate.handler
+    code_uri: ./sources/calculate.py
+    tags:
+      Name: Calculate function
 
-  # RaiseError:
-  #   type: function
-  #   description: Raises error.
-  #   handler: raise_error.handler
-  #   code_uri: ./sources/raise_error.py
-  #   tags:
-  #     Name: RaiseError function
+  RaiseError:
+    type: function
+    description: Raises error.
+    handler: raise_error.handler
+    code_uri: ./sources/raise_error.py
+    tags:
+      Name: RaiseError function
 
-  # DoLongTask:
-  #   type: function
-  #   description: Perfoms long running task.
-  #   handler: do_long_task.handler
-  #   code_uri: ./sources/do_long_task.py
-  #   timeout: 15
-  #   tags:
-  #     Name: DoLongTask function
+  DoLongTask:
+    type: function
+    description: Perfoms long running task.
+    handler: do_long_task.handler
+    code_uri: ./sources/do_long_task.py
+    timeout: 15
+    tags:
+      Name: DoLongTask function
 
-  # InvokeCalculateRole:
-  #   type: function-role
-  #   policies:
-  #     - name: invoke_calculate_policy
-  #       statement:
-  #         - Effect: Allow
-  #           Action: lambda:InvokeFunction
-  #           Resource: !GetAtt Calculate.Arn
+  InvokeCalculateRole:
+    type: function-role
+    policies:
+      - name: invoke_calculate_policy
+        statement:
+          - Effect: Allow
+            Action: lambda:InvokeFunction
+            Resource: !GetAtt Calculate.Arn
 
-  # CallCalculate:
-  #   type: function
-  #   description: Calls 'Calculate' function.
-  #   handler: call_function.handler
-  #   code_uri: ./sources/call_function.py
-  #   role: !GetAtt InvokeCalculateRole.Arn
-  #   timeout: 10
-  #   environment:
-  #     FUNCTION: !Ref Calculate
-  #     PAYLOAD: '{ "a": 1.2, "b": 2.3 }'
-  #   tags:
-  #     Name: CallCalculate function
-  #   depends_on:
-  #     - InvokeCalculateRole
+  CallCalculate:
+    type: function
+    description: Calls 'Calculate' function.
+    handler: call_function.handler
+    code_uri: ./sources/call_function.py
+    role: !GetAtt InvokeCalculateRole.Arn
+    timeout: 10
+    environment:
+      FUNCTION: !Ref Calculate
+      PAYLOAD: '{ "a": 1.2, "b": 2.3 }'
+    tags:
+      Name: CallCalculate function
+    depends_on:
+      - InvokeCalculateRole
 
-  # InvokeRaiseErrorRole:
-  #   type: function-role
-  #   policies:
-  #     - name: InvokeRaiseErrorPolicy
-  #       statement:
-  #         - Effect: Allow
-  #           Action: lambda:InvokeFunction
-  #           Resource: !GetAtt RaiseError.Arn
+  InvokeRaiseErrorRole:
+    type: function-role
+    policies:
+      - name: InvokeRaiseErrorPolicy
+        statement:
+          - Effect: Allow
+            Action: lambda:InvokeFunction
+            Resource: !GetAtt RaiseError.Arn
 
-  # CallRaiseError:
-  #   type: function
-  #   description: Calls 'RaiseError' function.
-  #   handler: call_function.handler
-  #   code_uri: ./sources/call_function.py
-  #   role: !GetAtt InvokeRaiseErrorRole.Arn
-  #   timeout: 10
-  #   environment:
-  #     FUNCTION: !Ref RaiseError
-  #   tags:
-  #     Name: CallRaiseError function
-  #   depends_on:
-  #     - InvokeRaiseErrorRole
+  CallRaiseError:
+    type: function
+    description: Calls 'RaiseError' function.
+    handler: call_function.handler
+    code_uri: ./sources/call_function.py
+    role: !GetAtt InvokeRaiseErrorRole.Arn
+    timeout: 10
+    environment:
+      FUNCTION: !Ref RaiseError
+    tags:
+      Name: CallRaiseError function
+    depends_on:
+      - InvokeRaiseErrorRole
 
-  # InvokeDoLongTaskRole:
-  #   type: function-role
-  #   policies:
-  #     - name: InvokeDoLongTaskPolicy
-  #       statement:
-  #         - Effect: Allow
-  #           Action: lambda:InvokeFunction
-  #           Resource: !GetAtt DoLongTask.Arn
+  InvokeDoLongTaskRole:
+    type: function-role
+    policies:
+      - name: InvokeDoLongTaskPolicy
+        statement:
+          - Effect: Allow
+            Action: lambda:InvokeFunction
+            Resource: !GetAtt DoLongTask.Arn
 
-  # CallDoLongTask:
-  #   type: function
-  #   description: Calls 'DoLongTask' function.
-  #   handler: call_function.handler
-  #   code_uri: ./sources/call_function.py
-  #   role: !GetAtt InvokeDoLongTaskRole.Arn
-  #   timeout: 30
-  #   environment:
-  #     FUNCTION: !Ref DoLongTask
-  #     PAYLOAD: '{ "a": 1.2, "b": 2.3 }'
-  #   tags:
-  #     Name: CallDoLongTask function
-  #   depends_on:
-  #     - InvokeDoLongTaskRole
+  CallDoLongTask:
+    type: function
+    description: Calls 'DoLongTask' function.
+    handler: call_function.handler
+    code_uri: ./sources/call_function.py
+    role: !GetAtt InvokeDoLongTaskRole.Arn
+    timeout: 30
+    environment:
+      FUNCTION: !Ref DoLongTask
+      PAYLOAD: '{ "a": 1.2, "b": 2.3 }'
+    tags:
+      Name: CallDoLongTask function
+    depends_on:
+      - InvokeDoLongTaskRole
 
-  # ComplexCalculate:
-  #   type: function
-  #   description: Performs complex calculation with code separeted into modules.
-  #   handler: index.handler
-  #   code_uri: ./sources/complex_calculate
-  #   timeout: 15
-  #   tags:
-  #     Name: ComplexCalculate function
+  ComplexCalculate:
+    type: function
+    description: Performs complex calculation with code separeted into modules.
+    handler: index.handler
+    code_uri: ./sources/complex_calculate
+    timeout: 15
+    tags:
+      Name: ComplexCalculate function
 
-  # DataBucket:
-  #   type: bucket
-  #   tags:
-  #     Name: DataBucket s3 bucket
+  DataBucket:
+    type: bucket
+    tags:
+      Name: DataBucket s3 bucket
 
-  # CheckBucketRole:
-  #   type: function-role
-  #   policies:
-  #     - name: CheckBucketPolicy
-  #       statement:
-  #         - Effect: Allow
-  #           Action: S3:PutObject*
-  #           Resource:
-  #             Fn::Sub:
-  #               - ${arn}/*
-  #               - { arn: !GetAtt DataBucket.Arn }
-  #   depends_on:
-  #     - DataBucket
+  CheckBucketRole:
+    type: function-role
+    policies:
+      - name: CheckBucketPolicy
+        statement:
+          - Effect: Allow
+            Action: S3:PutObject*
+            Resource:
+              Fn::Sub:
+                - ${arn}/*
+                - { arn: !GetAtt DataBucket.Arn }
+    depends_on:
+      - DataBucket
 
-  # CheckBucket:
-  #   type: function
-  #   description: Accesses s3 bucket.
-  #   handler: check_bucket.handler
-  #   code_uri: ./sources/check_bucket.py
-  #   role: !GetAtt CheckBucketRole.Arn
-  #   environment:
-  #     BUCKET: !Ref DataBucket
-  #   depends_on:
-  #     - CheckBucketRole
-  #     - DataBucket
+  CheckBucket:
+    type: function
+    description: Accesses s3 bucket.
+    handler: check_bucket.handler
+    code_uri: ./sources/check_bucket.py
+    role: !GetAtt CheckBucketRole.Arn
+    environment:
+      BUCKET: !Ref DataBucket
+    depends_on:
+      - CheckBucketRole
+      - DataBucket
 
-  # DataTable:
-  #   type: dynamodb-table
-  #   table_name: my-test-table-1
-  #   attribute_definitions:
-  #     - id: S
-  #     - timestamp: N
-  #     - type: S
-  #     - position: N
-  #   key_schema:
-  #     - id: HASH
-  #     - timestamp: RANGE
-  #   provisioned_throughput:
-  #     read_capacity_units: 5
-  #     write_capacity_units: 5
-  #   stream_specification:
-  #     stream_view_type: NEW_IMAGE
-  #   autoscaling:
-  #     read_capacity:
-  #       min: 5
-  #       max: 50
-  #     write_capacity:
-  #       min: 5
-  #       max: 50
-  #   local_secondary_indexes:
-  #     - index_name: test-local-index
-  #       key_schema:
-  #         - id: HASH
-  #         - position: RANGE
-  #       projection:
-  #         projection_type: ALL
-  #   global_secondary_indexes:
-  #     - index_name: test-global-index
-  #       key_schema:
-  #         - type: HASH
-  #         - timestamp: RANGE
-  #       projection:
-  #         projection_type: ALL
-  #       provisioned_throughput:
-  #         read_capacity_units: 1
-  #         write_capacity_units: 1
-  #       autoscaling:
-  #         read_capacity:
-  #           min: 1
-  #           max: 5
-  #         write_capacity:
-  #           min: 1
-  #           max: 5
-  #   tags:
-  #     Name: Test table
+  DataTable:
+    type: dynamodb-table
+    table_name: my-test-table-1
+    attribute_definitions:
+      - id: S
+      - timestamp: N
+      - type: S
+      - position: N
+    key_schema:
+      - id: HASH
+      - timestamp: RANGE
+    provisioned_throughput:
+      read_capacity_units: 5
+      write_capacity_units: 5
+    stream_specification:
+      stream_view_type: NEW_IMAGE
+    autoscaling:
+      read_capacity:
+        min: 5
+        max: 50
+      write_capacity:
+        min: 5
+        max: 50
+    local_secondary_indexes:
+      - index_name: test-local-index
+        key_schema:
+          - id: HASH
+          - position: RANGE
+        projection:
+          projection_type: ALL
+    global_secondary_indexes:
+      - index_name: test-global-index
+        key_schema:
+          - type: HASH
+          - timestamp: RANGE
+        projection:
+          projection_type: ALL
+        provisioned_throughput:
+          read_capacity_units: 1
+          write_capacity_units: 1
+        autoscaling:
+          read_capacity:
+            min: 1
+            max: 5
+          write_capacity:
+            min: 1
+            max: 5
+    tags:
+      Name: Test table
 
-  # CheckTableRole:
-  #   type: function-role
-  #   policies:
-  #     - name: CheckTablePolicy
-  #       statement:
-  #         - Effect: Allow
-  #           Action: dynamodb:*
-  #           Resource: !GetAtt DataTable.Arn
-  #   depends_on:
-  #     - DataTable
+  CheckTableRole:
+    type: function-role
+    policies:
+      - name: CheckTablePolicy
+        statement:
+          - Effect: Allow
+            Action: dynamodb:*
+            Resource: !GetAtt DataTable.Arn
+    depends_on:
+      - DataTable
 
-  # CheckTable:
-  #   type: function
-  #   description: Accesses dynamodb table.
-  #   handler: check_table.handler
-  #   code_uri: ./sources/check_table.py
-  #   role: !GetAtt CheckTableRole.Arn
-  #   environment:
-  #     TABLE: !Ref DataTable
-  #   depends_on:
-  #     - CheckTableRole
-  #     - DataTable
+  CheckTable:
+    type: function
+    description: Accesses dynamodb table.
+    handler: check_table.handler
+    code_uri: ./sources/check_table.py
+    role: !GetAtt CheckTableRole.Arn
+    environment:
+      TABLE: !Ref DataTable
+    depends_on:
+      - CheckTableRole
+      - DataTable
 
-  #   CheckTable:
-  #   type: function
-  #   description: Accesses dynamodb table.
-  #   handler: check_table.handler
-  #   code_uri: ./sources/check_table.py
-  #   role: !GetAtt CheckTableRole.Arn
-  #   environment:
-  #     TABLE: !Ref DataTable
-  #   depends_on:
-  #     - CheckTableRole
-  #     - DataTable
+    CheckTable:
+    type: function
+    description: Accesses dynamodb table.
+    handler: check_table.handler
+    code_uri: ./sources/check_table.py
+    role: !GetAtt CheckTableRole.Arn
+    environment:
+      TABLE: !Ref DataTable
+    depends_on:
+      - CheckTableRole
+      - DataTable
 
-  # ProcessApiRequest:
-  #   type: function
-  #   description: Handles http requests.
-  #   handler: process_api_request.handler
-  #   code_uri: ./sources/process_api_request.py
+  ProcessApiRequest:
+    type: function
+    description: Handles http requests.
+    handler: process_api_request.handler
+    code_uri: ./sources/process_api_request.py
 
-  # TestApiGateway:
-  #   type: apigateway
-  #   name: api-gateway-1
-  #   stage: dev1
-  #   endpoints:
-  #     - path: GET /
-  #       function: ProcessApiRequest
-  #     - path: GET /test1/{proxy+}
-  #       function: ProcessApiRequest
-  #     - path: GET /test2/get/{name}
-  #       function: ProcessApiRequest
-  #     - path: POST /test2/post/{value}
-  #       function: ProcessApiRequest
-  #     - path: GET /test3/{file}
-  #       role_resource: my-aws-buckets/mytestapp1/*
-  #       bucket: my-aws-buckets/mytestapp1/{file}
+  TestApiGateway:
+    type: apigateway
+    name: api-gateway-1
+    stage: dev1
+    endpoints:
+      - path: GET /
+        function: ProcessApiRequest
+      - path: GET /test1/{proxy+}
+        function: ProcessApiRequest
+      - path: GET /test2/get/{name}
+        function: ProcessApiRequest
+      - path: POST /test2/post/{value}
+        function: ProcessApiRequest
+      - path: GET /test3/{file}
+        role_resource: my-aws-buckets/mytestapp1/*
+        bucket: my-aws-buckets/mytestapp1/{file}
 
   DoStateAction:
     type: function
