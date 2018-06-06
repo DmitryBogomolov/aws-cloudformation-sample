@@ -5,6 +5,7 @@ import shutil
 from utils import helper
 from utils.pattern import pattern
 from utils.logger import log
+from utils.parallel import run_parallel
 from .deploy_sources import run as call_deploy_sources
 
 def pack_directory(zf, real_dir, zip_dir):
@@ -35,8 +36,8 @@ def build_archive(code_uri):
     log(' - {} -> {} ({})', code_uri, archive_name, kind)
 
 def build_packages(pattern):
-    for code_uri in helper.get_code_uri_list(pattern):
-        build_archive(code_uri)
+    run_parallel(((build_archive, [code_uri])
+        for code_uri in helper.get_code_uri_list(pattern)))
 
 def run(deploy_sources=False):
     log('Packing sources')

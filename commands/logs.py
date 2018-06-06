@@ -1,11 +1,11 @@
 import re
 from datetime import datetime
 from collections import namedtuple
-import concurrent.futures
 import operator
 from utils.client import client
 from utils.pattern import pattern
 from utils.logger import log, logError
+from utils.parallel import run_parallel
 
 logs_client = client('logs')
 
@@ -102,13 +102,10 @@ def get_stream_events(function_name, group_name, stream_name):
     return stream_name, entries
 
 def load_all_events(function_name, group_name, stream_names):
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-        futures = [executor.submit(get_stream_events, function_name, group_name, stream_name)
-            for stream_name in stream_names]
-    done_futures, _ = concurrent.futures.wait(futures)
+    results = run_parallel(((get_stream_events, (function_name, group_name, stream_name))
+        for stream_name in stream_names))
     events_by_stream = {}
-    for future in done_futures:
-        stream_name, events = future.result()
+    for stream_name, events in results:
         events_by_stream[stream_name] = events
     total_events = []
     for stream_name in stream_names:
