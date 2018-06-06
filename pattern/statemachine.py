@@ -54,6 +54,10 @@ Properties: {}
 
     TYPE = 'statemachine'
 
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.full_name = self.root.get('project') + '-' + self.name
+
     def _dump(self, template, parent_template):
         super()._dump(template, parent_template)
         name = self.name
@@ -85,5 +89,5 @@ Properties: {}
         outputs[name + 'Arn'] = make_output(Custom('!Ref', name))
 
     def _dump_properties(self, properties):
-        properties['StateMachineName'] = self.root.get('project') + '-' + self.name
+        properties['StateMachineName'] = self.full_name
         properties['RoleArn'] = Custom('!GetAtt', get_role_name(self.name) + '.Arn')
