@@ -1,6 +1,6 @@
 from utils import helper
 from utils.yaml import Custom
-from .utils import try_set_field, make_output
+from .utils import get_full_name, try_set_field, make_output
 from .base_resource import BaseResource
 
 class LogGroup(BaseResource):
@@ -43,7 +43,7 @@ Properties:
 
     def __init__(self, *args):
         super().__init__(*args)
-        self.full_name = self.root.get('project') + '-' + self.name
+        self.full_name = get_full_name(self.name, self.root)
         self.log_group_name = '/aws/lambda/' + self.full_name
 
     def _dump(self, template, parent_template):

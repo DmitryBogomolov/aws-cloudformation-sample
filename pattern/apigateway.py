@@ -1,5 +1,5 @@
 from utils.yaml import Custom
-from .utils import make_output
+from .utils import get_full_name, make_output
 from .base_resource import BaseResource
 
 
@@ -102,6 +102,12 @@ Properties:
   HttpMethod: GET
   MethodResponses:
     - StatusCode: 200
+      ResponseParameters:
+        method.response.header.Timestamp: true
+        method.response.header.Content-Length: true
+        method.response.header.Content-Type: true
+    - StatusCode: 400
+    - StatusCode: 500
   Integration:
     IntegrationHttpMethod: GET
     Type: AWS
@@ -115,6 +121,14 @@ Properties:
       integration.request.header.Content-Type: method.request.header.Content-Type
     IntegrationResponses:
       - StatusCode: 200
+        ResponseParameters:
+          method.response.header.Timestamp: integration.response.header.Date
+          method.response.header.Content-Length: integration.response.header.Content-Length
+          method.response.header.Content-Type: integration.response.header.Content-Type
+      - StatusCode: 400
+        SelectionPattern: 4\d{2}
+      - StatusCode: 500
+        SelectionPattern: 5\d{2}
 '''
 
     def _dump_properties(self, properties):
@@ -267,4 +281,4 @@ Properties:
             outputs[name + 'Path' + str(i + 1)] = make_output(url)
 
     def _dump_properties(self, properties):
-        properties['Name'] = self.get('name')
+        properties['Name'] = get_full_name(self.name, self.root)

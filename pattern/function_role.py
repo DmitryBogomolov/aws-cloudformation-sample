@@ -1,5 +1,5 @@
 from utils.yaml import Custom
-from .utils import set_sub_list
+from .utils import get_full_name, set_sub_list
 from .base import Base
 from .base_resource import BaseResource
 
@@ -39,5 +39,5 @@ Properties:
 
     def _dump_properties(self, properties):
         properties['RoleName'] = Custom('!Sub',
-            self.root.get('project') + '-${AWS::Region}-' + self.name)
+            get_full_name('${AWS::Region}-' + self.name, self.root))
         set_sub_list(properties['Policies'], self, 'policies', Policy)

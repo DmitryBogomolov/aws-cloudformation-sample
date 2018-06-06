@@ -1,6 +1,6 @@
 import json
 from utils.yaml import Custom
-from .utils import make_output, try_set_field
+from .utils import get_full_name, make_output, try_set_field
 from .base_resource import BaseResource
 
 class StateMachineRole(BaseResource):
@@ -56,7 +56,7 @@ Properties: {}
 
     def __init__(self, *args):
         super().__init__(*args)
-        self.full_name = self.root.get('project') + '-' + self.name
+        self.full_name = get_full_name(self.name, self.root)
 
     def _dump(self, template, parent_template):
         super()._dump(template, parent_template)

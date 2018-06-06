@@ -1,3 +1,6 @@
+def get_full_name(name, root):
+    return root.get('project') + '-' + name
+
 def try_set_field(target, name, value):
     if value:
         target[name] = value
