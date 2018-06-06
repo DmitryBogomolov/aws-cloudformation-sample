@@ -52,7 +52,7 @@ Type: AWS::StepFunctions::StateMachine
 Properties: {}
 '''
 
-    TYPE = 'state-machine'
+    TYPE = 'statemachine'
 
     def _dump(self, template, parent_template):
         super()._dump(template, parent_template)

@@ -260,7 +260,7 @@ resources:
       Name: DoStateAction function
 
   StateMachine:
-    type: state-machine
+    type: statemachine
     comment: This is a comment
     start_at: start
     states:
