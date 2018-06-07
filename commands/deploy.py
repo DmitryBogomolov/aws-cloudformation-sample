@@ -1,3 +1,7 @@
+'''
+Deploys cloudformation stack.
+'''
+
 import boto3
 import hashlib
 from utils import helper

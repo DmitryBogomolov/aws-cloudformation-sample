@@ -1,3 +1,7 @@
+'''
+Removes cloudformation stack.
+'''
+
 from utils import helper
 from utils.client import client
 from utils.pattern import pattern

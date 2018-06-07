@@ -1,3 +1,7 @@
+'''
+Gets cloudwatch logs for lambda function.
+'''
+
 import re
 from datetime import datetime
 from collections import namedtuple

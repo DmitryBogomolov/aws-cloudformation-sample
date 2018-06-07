@@ -1,3 +1,7 @@
+'''
+Uploads zip archives to s3 bucket.
+'''
+
 from boto3.exceptions import S3UploadFailedError
 from utils import helper
 from utils.client import client
