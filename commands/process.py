@@ -1,3 +1,7 @@
+'''
+Translates pattern file into cloudformation template file.
+'''
+
 from utils import helper
 from utils.pattern import pattern
 from utils.logger import log

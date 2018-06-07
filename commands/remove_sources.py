@@ -1,3 +1,7 @@
+'''
+Deletes zip archives from s3 bucket.
+'''
+
 import operator
 from utils import helper
 from utils.client import client

@@ -1,3 +1,7 @@
+'''
+Starts (and cancels) state machine.
+'''
+
 import time
 import json
 from utils.client import session, client

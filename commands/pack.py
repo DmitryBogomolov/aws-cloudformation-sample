@@ -1,3 +1,7 @@
+'''
+Packs lambda sources into zip archives.
+'''
+
 import os
 from os import path
 import zipfile

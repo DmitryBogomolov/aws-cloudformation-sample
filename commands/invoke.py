@@ -1,3 +1,7 @@
+'''
+Invokes lambda function.
+'''
+
 import json
 from utils.client import client
 from utils.pattern import pattern

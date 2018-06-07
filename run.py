@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+'''
+Executes different commands.
+'''
 
 import sys
 import argparse
@@ -10,7 +13,8 @@ def setup_subparsers(subparsers):
     for command, func in commands.items():
         functions[command] = func
         signature = inspect.signature(func)
-        subparser = subparsers.add_parser(command)
+        subparser = subparsers.add_parser(command,
+            description=sys.modules[func.__module__].__doc__)
         for parameter in signature.parameters.values():
             args = { 'required': True }
             if parameter.default is not signature.empty:
@@ -21,8 +25,8 @@ def setup_subparsers(subparsers):
     return functions
 
 def main():
-    parser = argparse.ArgumentParser()
-    subparsers = parser.add_subparsers(dest='command')
+    parser = argparse.ArgumentParser(description=__doc__)
+    subparsers = parser.add_subparsers(dest='command', description='Select command')
     functions = setup_subparsers(subparsers)
 
     args = vars(parser.parse_args())
