@@ -1,0 +1,30 @@
+project: apigateways
+bucket: my-aws-buckets
+
+description: Shows api gateways.
+
+function_runtime: python3.6
+function_timeout: 5
+
+resources:
+  ProcessApiRequest:
+    type: function
+    description: Handles http requests.
+    handler: process_api_request.handler
+    code_uri: ./sources/process_api_request.py
+
+  TestApiGateway:
+    type: apigateway
+    stage: dev1
+    endpoints:
+      - path: GET /
+        function: ProcessApiRequest
+      - path: GET /test1/{proxy+}
+        function: ProcessApiRequest
+      - path: GET /test2/get/{name}
+        function: ProcessApiRequest
+      - path: POST /test2/post/{value}
+        function: ProcessApiRequest
+      - path: GET /test3/{file}
+        role_resource: my-aws-buckets/mytestapp1/*
+        bucket: my-aws-buckets/mytestapp1/{file}
