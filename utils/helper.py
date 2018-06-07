@@ -26,5 +26,13 @@ def get_processed_template_path():
 def get_archive_path(archive_name):
     return os.path.join(PACKAGE_PATH, archive_name)
 
-def get_code_uri_list(pattern):
-    return sorted(list(set(function.get('code_uri') for function in pattern.functions)))
+def get_code_uri_list(functions):
+    return sorted(set(function.get('code_uri') for function in functions))
+
+def select_functions(pattern, filter_value):
+    if filter_value:
+        names = set(filter_value.split(','))
+        is_valid = lambda function: function.name in names
+    else:
+        is_valid = lambda _: True
+    return filter(is_valid, pattern.functions)

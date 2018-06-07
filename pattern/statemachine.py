@@ -2,32 +2,21 @@ import json
 from utils.yaml import Custom
 from .utils import get_full_name, make_output, try_set_field
 from .base_resource import BaseResource
+from .role import Role
 
-class StateMachineRole(BaseResource):
-    TEMPLATE = \
+class StateMachineRole(Role):
+    STATEMENT_TEMPLATE = \
 '''
-Type: AWS::IAM::Role
-Properties:
-  AssumeRolePolicyDocument:
-    Version: 2012-10-17
-    Statement:
-      - Effect: Allow
-        Principal:
-          Service: !Sub states.${AWS::Region}.amazonaws.com
-        Action: sts:AssumeRole
-  Path: '/'
-  Policies:
-    - PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Action: lambda:InvokeFunction
+- Effect: Allow
+  Action: lambda:InvokeFunction
 '''
+
+    PRINCIPAL_SERVICE = Custom('!Sub', 'states.${AWS::Region}.amazonaws.com')
 
     def _dump_properties(self, properties):
-        properties['Policies'][0]['PolicyName'] = self.name + 'Policy'
-        properties['Policies'][0]['PolicyDocument']['Statement'][0]['Resource'] = [
-            Custom('!GetAtt', name + '.Arn') for name in self.get('functions')]
+        super()._dump_properties(properties)
+        statement = properties['Policies'][0]['PolicyDocument']['Statement'][0]
+        statement['Resource'] = [Custom('!GetAtt', name + '.Arn') for name in self.get('functions')]
 
 
 def get_role_name(name):

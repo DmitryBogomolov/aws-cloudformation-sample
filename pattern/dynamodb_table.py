@@ -2,6 +2,7 @@ from utils.yaml import Custom
 from .utils import try_set_field, make_output, set_sub_list, set_tags_list, sanitize_resource_name
 from .base import Base
 from .base_resource import BaseResource
+from .role import Role
 
 def take_pair(obj):
     return list(obj.items())[0]
@@ -106,45 +107,33 @@ Properties:
         properties['ScalingTargetId'] = Custom('!Ref', self._args['target'])
 
 
-class DynamoDBScalingRole(BaseResource):
-    TEMPLATE = \
+class DynamoDBScalingRole(Role):
+    STATEMENT_TEMPLATE = \
 '''
-Type: AWS::IAM::Role
-Properties:
-  AssumeRolePolicyDocument:
-    Version: 2012-10-17
-    Statement:
-      - Effect: Allow
-        Principal:
-          Service: application-autoscaling.amazonaws.com
-        Action: sts:AssumeRole
-  Path: /
-  Policies:
-    - PolicyName: root
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Action:
-              - dynamodb:DescribeTable
-              - dynamodb:UpdateTable
-          - Effect: Allow
-            Action:
-              - cloudwatch:PutMetricAlarm
-              - cloudwatch:DescribeAlarms
-              - cloudwatch:GetMetricStatistics
-              - cloudwatch:SetAlarmState
-              - cloudwatch:DeleteAlarms
-            Resource: '*'
+- Effect: Allow
+  Action:
+    - dynamodb:DescribeTable
+    - dynamodb:UpdateTable
+- Effect: Allow
+  Action:
+    - cloudwatch:PutMetricAlarm
+    - cloudwatch:DescribeAlarms
+    - cloudwatch:GetMetricStatistics
+    - cloudwatch:SetAlarmState
+    - cloudwatch:DeleteAlarms
+  Resource: '*'
 '''
+
+    PRINCIPAL_SERVICE = 'application-autoscaling.amazonaws.com'
 
     def __init__(self, name, source, root, **kwargs):
         super().__init__(name, source, root)
         self._args = kwargs
 
     def _dump_properties(self, properties):
-        properties['Policies'][0]['PolicyDocument']['Statement'][0]['Resource'] = Custom(
-            '!GetAtt', self._args['table'] + '.Arn')
+        super()._dump_properties(properties)
+        statement = properties['Policies'][0]['PolicyDocument']['Statement'][0]
+        statement['Resource'] = Custom('!GetAtt', self._args['table'] + '.Arn')
 
 
 class DynamoDBTable(BaseResource):

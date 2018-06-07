@@ -8,5 +8,5 @@ def run():
     helper.ensure_folder()
     template = pattern.dump()
     file_path = helper.get_processed_template_path()
-    save(file_path, template);
+    save(file_path, template)
     log('Saved to {}', file_path)
