@@ -1,7 +1,8 @@
+import yaml
 from utils.yaml import Custom
 from .utils import get_full_name, make_output
 from .base_resource import BaseResource
-
+from .role import Role
 
 class ApiGatewayResouce(BaseResource):
     TEMPLATE = \
@@ -60,34 +61,23 @@ Properties:
         properties['SourceArn']['Fn::Sub'][1]['api'] = Custom('!Ref', self.get('rest_api'))
 
 
-class ApiGatewayS3ObjectRole(BaseResource):
-    TEMPLATE = \
+class ApiGatewayS3ObjectRole(Role):
+    STATEMENT_TEMPLATE = \
 '''
-Type: AWS::IAM::Role
-Properties:
-  AssumeRolePolicyDocument:
-    Version: '2012-10-17'
-    Statement:
-      - Effect: Allow
-        Principal:
-          Service: apigateway.amazonaws.com
-        Action: sts:AssumeRole
-  Policies:
-  - PolicyDocument:
-      Version: '2012-10-17'
-      Statement:
-        - Effect: Allow
-          Action: s3:GetObject
-          Resource:
-            Fn::Sub:
-              - arn:aws:s3:::${bucket}
-              - {}
+- Effect: Allow
+  Action: s3:GetObject
+  Resource:
+    Fn::Sub:
+      - arn:aws:s3:::${bucket}
+      - {}
 '''
 
+    PRINCIPAL_SERVICE = 'apigateway.amazonaws.com'
+
     def _dump_properties(self, properties):
-        properties['Policies'][0]['PolicyName'] = self.name + 'Policy'
-        properties['Policies'][0]['PolicyDocument']['Statement'][0][
-            'Resource']['Fn::Sub'][1]['bucket'] = self.get('bucket')
+        super()._dump_properties(properties)
+        statement = properties['Policies'][0]['PolicyDocument']['Statement'][0]
+        statement['Resource']['Fn::Sub'][1]['bucket'] = self.get('bucket')
 
 
 class ApiGatewayBucketMethod(BaseResource):

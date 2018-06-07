@@ -34,12 +34,10 @@ resources:
 
   InvokeCalculateRole:
     type: function-role
-    policies:
-      - name: InvokeCalculatePolicy
-        statement:
-          - Effect: Allow
-            Action: lambda:InvokeFunction
-            Resource: !GetAtt Calculate.Arn
+    statement:
+      - Effect: Allow
+        Action: lambda:InvokeFunction
+        Resource: !GetAtt Calculate.Arn
 
   CallCalculate:
     type: function
@@ -58,12 +56,10 @@ resources:
 
   InvokeRaiseErrorRole:
     type: function-role
-    policies:
-      - name: InvokeRaiseErrorPolicy
-        statement:
-          - Effect: Allow
-            Action: lambda:InvokeFunction
-            Resource: !GetAtt RaiseError.Arn
+    statement:
+      - Effect: Allow
+        Action: lambda:InvokeFunction
+        Resource: !GetAtt RaiseError.Arn
 
   CallRaiseError:
     type: function
@@ -81,12 +77,10 @@ resources:
 
   InvokeDoLongTaskRole:
     type: function-role
-    policies:
-      - name: InvokeDoLongTaskPolicy
-        statement:
-          - Effect: Allow
-            Action: lambda:InvokeFunction
-            Resource: !GetAtt DoLongTask.Arn
+    statement:
+      - Effect: Allow
+        Action: lambda:InvokeFunction
+        Resource: !GetAtt DoLongTask.Arn
 
   CallDoLongTask:
     type: function
@@ -119,15 +113,13 @@ resources:
 
   CheckBucketRole:
     type: function-role
-    policies:
-      - name: CheckBucketPolicy
-        statement:
-          - Effect: Allow
-            Action: S3:PutObject*
-            Resource:
-              Fn::Sub:
-                - ${arn}/*
-                - { arn: !GetAtt DataBucket.Arn }
+    statement:
+      - Effect: Allow
+        Action: S3:PutObject*
+        Resource:
+          Fn::Sub:
+            - ${arn}/*
+            - { arn: !GetAtt DataBucket.Arn }
     depends_on:
       - DataBucket
 
@@ -195,12 +187,10 @@ resources:
 
   CheckTableRole:
     type: function-role
-    policies:
-      - name: CheckTablePolicy
-        statement:
-          - Effect: Allow
-            Action: dynamodb:*
-            Resource: !GetAtt DataTable.Arn
+    statement:
+      - Effect: Allow
+        Action: dynamodb:*
+        Resource: !GetAtt DataTable.Arn
     depends_on:
       - DataTable
 
