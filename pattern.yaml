@@ -35,7 +35,7 @@ resources:
   InvokeCalculateRole:
     type: function-role
     policies:
-      - name: invoke_calculate_policy
+      - name: InvokeCalculatePolicy
         statement:
           - Effect: Allow
             Action: lambda:InvokeFunction
