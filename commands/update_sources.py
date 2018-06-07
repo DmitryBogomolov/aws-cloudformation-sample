@@ -15,8 +15,9 @@ def update_source(function, project, bucket):
     except Exception as err:
         logError(err)
 
-def run():
+def run(names=None):
     project = pattern.get('project')
     bucket = pattern.get('bucket')
-    run_parallel(((update_source, [function, project, bucket])
-        for function in pattern.functions))
+    functions = helper.select_functions(pattern, names)
+    get_task = lambda function: (update_source, [function, project, bucket])
+    run_parallel(map(get_task, functions))

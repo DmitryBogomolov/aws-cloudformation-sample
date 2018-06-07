@@ -20,8 +20,9 @@ def deploy_source(code_uri, bucket):
     except S3UploadFailedError as err:
         logError(err)
 
-def run():
+def run(names=None):
     log('Deploying sources')
     bucket = pattern.get('bucket')
-    run_parallel(((deploy_source, [code_uri, bucket])
-        for code_uri in helper.get_code_uri_list(pattern)))
+    functions = helper.select_functions(pattern, names)
+    get_task = lambda code_uri: (deploy_source, [code_uri, bucket])
+    run_parallel(map(get_task, helper.get_code_uri_list(functions)))
