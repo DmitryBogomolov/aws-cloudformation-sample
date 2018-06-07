@@ -216,18 +216,6 @@ resources:
       - CheckTableRole
       - DataTable
 
-    CheckTable:
-    type: function
-    description: Accesses dynamodb table.
-    handler: check_table.handler
-    code_uri: ./sources/check_table.py
-    role: !GetAtt CheckTableRole.Arn
-    environment:
-      TABLE: !Ref DataTable
-    depends_on:
-      - CheckTableRole
-      - DataTable
-
   ProcessApiRequest:
     type: function
     description: Handles http requests.
