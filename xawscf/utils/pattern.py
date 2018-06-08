@@ -1,6 +1,6 @@
 from . import helper
 from .yaml import load
-from pattern.root import Root
+from ..pattern.root import Root
 
 def check_required_fields(source):
     absent = []

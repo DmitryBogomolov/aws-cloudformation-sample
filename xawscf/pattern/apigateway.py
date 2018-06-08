@@ -1,5 +1,5 @@
 import yaml
-from utils.yaml import Custom
+from ..utils.yaml import Custom
 from .utils import get_full_name, make_output
 from .base_resource import BaseResource
 from .role import Role

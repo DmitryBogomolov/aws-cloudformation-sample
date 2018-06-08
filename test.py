@@ -3,12 +3,12 @@
 import unittest
 import os
 
-from utils import yaml
+from xawscf.utils import yaml
 yaml.load = lambda _: { 'project': 'test', 'bucket': 'test' }
 
-from utils import helper
+from xawscf.utils import helper
 # TODO: utils.pattern.py is imported - find a way to stub it.
-from commands import deploy_sources
+from xawscf.commands import deploy_sources
 
 class Tester(object):
     def __init__(self, **kwargs):

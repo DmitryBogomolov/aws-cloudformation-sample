@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
-'''
-Executes different commands.
-'''
 
 import sys
 import argparse
 import inspect
-from commands import commands
+import xawscf
 
 def setup_subparsers(subparsers):
-    functions = {}
-    for command, func in commands.items():
-        functions[command] = func
+    for command, func in xawscf.actions.items():
         signature = inspect.signature(func)
         subparser = subparsers.add_parser(command,
             description=sys.modules[func.__module__].__doc__)
@@ -22,12 +17,11 @@ def setup_subparsers(subparsers):
                 if isinstance(parameter.default, bool):
                     args['action'] = 'store_false' if parameter.default else 'store_true'
             subparser.add_argument('--' + parameter.name, **args)
-    return functions
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    subparsers = parser.add_subparsers(dest='command', description='Select command')
-    functions = setup_subparsers(subparsers)
+    parser = argparse.ArgumentParser(description=xawscf.__doc__)
+    subparsers = parser.add_subparsers(dest='command', description='Select subcommand')
+    setup_subparsers(subparsers)
 
     args = vars(parser.parse_args())
     command = args.pop('command')
@@ -35,7 +29,7 @@ def main():
         parser.print_help()
         return 0
 
-    return functions[command](**args)
+    return xawscf.actions[command](**args)
 
 if __name__ == '__main__':
     sys.exit(main())

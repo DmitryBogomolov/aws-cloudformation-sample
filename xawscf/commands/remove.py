@@ -2,11 +2,11 @@
 Removes cloudformation stack.
 '''
 
-from utils import helper
-from utils.client import client
-from utils.pattern import pattern
-from utils.cf_waiter import wait, WaiterError
-from utils.logger import log
+from ..utils import helper
+from ..utils.client import client
+from ..utils.pattern import pattern
+from ..utils.cf_waiter import wait, WaiterError
+from ..utils.logger import log
 from .remove_sources import run as call_remove_sources
 
 cf = client('cloudformation')

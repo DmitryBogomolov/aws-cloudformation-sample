@@ -2,11 +2,11 @@
 Updates lambda sources.
 '''
 
-from utils import helper
-from utils.client import client
-from utils.pattern import pattern
-from utils.logger import log, logError
-from utils.parallel import run_parallel
+from ..utils import helper
+from ..utils.client import client
+from ..utils.pattern import pattern
+from ..utils.logger import log, logError
+from ..utils.parallel import run_parallel
 
 lambda_client = client('lambda')
 

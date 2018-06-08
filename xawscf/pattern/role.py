@@ -1,5 +1,5 @@
 import yaml
-from utils.yaml import Custom
+from ..utils.yaml import Custom
 from .utils import get_full_name, try_set_field
 from .base_resource import BaseResource
 

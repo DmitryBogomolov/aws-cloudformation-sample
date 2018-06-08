@@ -3,10 +3,10 @@ Deletes zip archives from s3 bucket.
 '''
 
 import operator
-from utils import helper
-from utils.client import client
-from utils.pattern import pattern
-from utils.logger import log
+from ..utils import helper
+from ..utils.client import client
+from ..utils.pattern import pattern
+from ..utils.logger import log
 
 s3_client = client('s3')
 

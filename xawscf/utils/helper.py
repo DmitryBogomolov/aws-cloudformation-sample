@@ -1,5 +1,5 @@
 import os
-from utils.yaml import load
+from .yaml import load
 
 PACKAGE_PATH = os.path.abspath('.package')
 PATTERN_NAME = 'pattern.yaml'

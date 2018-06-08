@@ -4,7 +4,6 @@ import inspect
 from collections import OrderedDict
 
 commands_dir = os.path.dirname(__file__)
-package = os.path.basename(commands_dir)
 
 def is_entry_function(obj):
     return inspect.isfunction(obj) and obj.__name__ == 'run'
@@ -12,10 +11,10 @@ def is_entry_function(obj):
 commands = OrderedDict()
 
 for filename in sorted(os.listdir(commands_dir)):
-    command, ext = os.path.splitext(filename) 
+    command, ext = os.path.splitext(filename)
     if ext != '.py' or command == '__init__':
         continue
-    mod = importlib.import_module('.' + command, package)
+    mod = importlib.import_module('.' + command, __name__)
     members = inspect.getmembers(mod, is_entry_function)
     if len(members) == 0:
         continue

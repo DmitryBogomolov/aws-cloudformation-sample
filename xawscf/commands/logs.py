@@ -6,10 +6,10 @@ import re
 from datetime import datetime
 from collections import namedtuple
 import operator
-from utils.client import client
-from utils.pattern import pattern
-from utils.logger import log, logError
-from utils.parallel import run_parallel
+from ..utils.client import client
+from ..utils.pattern import pattern
+from ..utils.logger import log, logError
+from ..utils.parallel import run_parallel
 
 logs_client = client('logs')
 
