@@ -1,14 +1,19 @@
+name = xawscf
+
 build:
-	docker build -t xawscf .
+	docker build -t $(name) .
+
+remove:
+	docker rmi $(name)
 
 run:
-	docker run -dt --name xawscf xawscf
+	docker run -dt --name $(name) $(name)
 
 stop:
-	docker rm -f xawscf
+	docker rm -f $(name)
 
 exec:
-	docker exec -it xawscf sh
+	docker exec -it $(name) sh
 
 install:
 	python3 setup.py install

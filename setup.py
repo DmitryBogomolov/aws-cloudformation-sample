@@ -13,5 +13,6 @@ setup(
     license='MIT',
     packages=find_packages(),
     install_requires=['boto3', 'PyYAML'],
-    scripts=['bin/xawscf']
+    scripts=['bin/xawscf'],
+    test_suite='test'
 )
