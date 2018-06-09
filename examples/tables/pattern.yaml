@@ -1,0 +1,79 @@
+project: tables
+bucket: my-aws-buckets
+
+description: Shows dynamodb tables.
+
+function_runtime: python3.6
+function_timeout: 5
+
+resources:
+  DataTable:
+    type: dynamodb-table
+    table_name: my-test-table-1
+    attribute_definitions:
+      - id: S
+      - timestamp: N
+      - type: S
+      - position: N
+    key_schema:
+      - id: HASH
+      - timestamp: RANGE
+    provisioned_throughput:
+      read_capacity_units: 5
+      write_capacity_units: 5
+    stream_specification:
+      stream_view_type: NEW_IMAGE
+    autoscaling:
+      read_capacity:
+        min: 5
+        max: 50
+      write_capacity:
+        min: 5
+        max: 50
+    local_secondary_indexes:
+      - index_name: test-local-index
+        key_schema:
+          - id: HASH
+          - position: RANGE
+        projection:
+          projection_type: ALL
+    global_secondary_indexes:
+      - index_name: test-global-index
+        key_schema:
+          - type: HASH
+          - timestamp: RANGE
+        projection:
+          projection_type: ALL
+        provisioned_throughput:
+          read_capacity_units: 1
+          write_capacity_units: 1
+        autoscaling:
+          read_capacity:
+            min: 1
+            max: 5
+          write_capacity:
+            min: 1
+            max: 5
+    tags:
+      Name: Test table
+
+  CheckTableRole:
+    type: function-role
+    statement:
+      - Effect: Allow
+        Action: dynamodb:*
+        Resource: !GetAtt DataTable.Arn
+    depends_on:
+      - DataTable
+
+  CheckTable:
+    type: function
+    description: Accesses dynamodb table.
+    handler: check_table.handler
+    code_uri: ./sources/check_table.py
+    role: !GetAtt CheckTableRole.Arn
+    environment:
+      TABLE: !Ref DataTable
+    depends_on:
+      - CheckTableRole
+      - DataTable

@@ -1,6 +1,5 @@
-.vscode
-
+.*
+!.aws
 __pycache__
-.package
-.aws
 *.egg-info
+Dockerfile
