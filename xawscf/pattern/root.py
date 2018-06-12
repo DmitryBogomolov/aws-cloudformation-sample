@@ -1,4 +1,4 @@
-from .const import SOURCES_BUCKET
+from ..utils.const import SOURCES_BUCKET
 from .utils import try_set_field
 from .base import Base
 

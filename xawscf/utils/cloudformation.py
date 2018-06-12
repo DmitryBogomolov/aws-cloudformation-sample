@@ -1,6 +1,6 @@
 from botocore.exceptions import WaiterError
 from .client import client
-from ..pattern.const import SOURCES_BUCKET
+from .const import SOURCES_BUCKET
 
 cf = client('cloudformation')
 

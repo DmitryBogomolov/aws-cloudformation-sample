@@ -1,30 +1,29 @@
-import os
-from .yaml import load
+from os import path, makedirs
 
-PACKAGE_PATH = os.path.abspath('.package')
+PACKAGE_PATH = path.abspath('.package')
 PATTERN_NAME = 'pattern.yaml'
 TEMPLATE_NAME = 'template.yaml'
 
 def ensure_folder():
-    os.makedirs(PACKAGE_PATH, exist_ok=True)
+    makedirs(PACKAGE_PATH, exist_ok=True)
 
 def get_pattern_path():
-    return os.path.abspath(PATTERN_NAME)
+    return path.abspath(PATTERN_NAME)
 
 def get_archive_name(code_uri):
-    norm = os.path.relpath(os.path.normcase(os.path.normpath(code_uri)))
+    norm = path.relpath(path.normcase(path.normpath(code_uri)))
     if norm.startswith('..'):
         raise RuntimeError('Not valid "CodeUri": {}'.format(code_uri))
-    root, ext = os.path.splitext(norm)
-    root = root.replace(os.path.sep, '_')
+    root, ext = path.splitext(norm)
+    root = root.replace(path.sep, '_')
     ext = '_' + ext[1:] if ext else ''
     return root + ext + '.zip'
 
 def get_processed_template_path():
-    return os.path.join(PACKAGE_PATH, TEMPLATE_NAME)
+    return path.join(PACKAGE_PATH, TEMPLATE_NAME)
 
 def get_archive_path(archive_name):
-    return os.path.join(PACKAGE_PATH, archive_name)
+    return path.join(PACKAGE_PATH, archive_name)
 
 def get_code_uri_list(functions):
     return sorted(set(function.get('code_uri') for function in functions))
