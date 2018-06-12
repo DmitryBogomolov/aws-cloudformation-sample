@@ -25,18 +25,20 @@ def run():
         log(err.response['Error']['Message'])
         return 1
     for name, key in FIELDS:
-        log('{:20}{}', name, stack[key])
+        log('{:20}{}', name, stack.get(key))
     log('')
 
-    log('Functions')
-    for obj in pattern.functions:
-        log('  {}', obj.name)
-    log('')
+    if len(pattern.functions) > 0:
+        log('Functions')
+        for obj in pattern.functions:
+            log('  {}', obj.name)
+        log('')
 
-    log('State machines')
-    for obj in pattern.statemachines:
-        log('  {}', obj.name)
-    log('')
+    if len(pattern.statemachines) > 0:
+        log('State machines')
+        for obj in pattern.statemachines:
+            log('  {}', obj.name)
+        log('')
 
     log('Outputs')
     for obj in sorted(stack['Outputs'], key=lambda obj: obj['OutputKey']):
