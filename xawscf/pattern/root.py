@@ -1,5 +1,5 @@
 from ..utils.const import SOURCES_BUCKET
-from .utils import try_set_field
+from ..utils.helper import try_set_field
 from .base import Base
 
 def find_by_name(resources, name):

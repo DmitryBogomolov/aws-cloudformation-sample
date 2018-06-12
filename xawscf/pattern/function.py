@@ -1,7 +1,7 @@
 from ..utils import helper
 from ..utils.yaml import Custom
 from ..utils.const import SOURCES_BUCKET
-from .utils import get_full_name, try_set_field, make_output
+from ..utils.helper import get_full_name, try_set_field, make_output
 from .base_resource import BaseResource
 
 class LogGroup(BaseResource):
