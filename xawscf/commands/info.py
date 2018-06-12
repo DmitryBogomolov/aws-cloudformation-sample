@@ -3,9 +3,9 @@ Gets cloudformation stack info.
 '''
 
 from ..utils.client import client, exceptions
-from ..utils.pattern import pattern
 from ..utils.logger import log
 from ..utils.cloudformation import get_stack_info
+from ..pattern.pattern import pattern
 
 cf = client('cloudformation')
 

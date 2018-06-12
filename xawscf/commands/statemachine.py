@@ -5,8 +5,8 @@ Starts (and cancels) state machine.
 import time
 import json
 from ..utils.client import client
-from ..utils.pattern import pattern
 from ..utils.logger import log, logError
+from ..pattern.pattern import pattern
 
 stepfunctions = client('stepfunctions')
 sts = client('sts')

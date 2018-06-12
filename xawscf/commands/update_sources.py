@@ -4,10 +4,10 @@ Updates lambda sources.
 
 from ..utils import helper
 from ..utils.client import client
-from ..utils.pattern import pattern
 from ..utils.logger import log, logError
 from ..utils.parallel import run_parallel
 from ..utils.cloudformation import get_sources_bucket
+from ..pattern.pattern import pattern
 
 lambda_client = client('lambda')
 

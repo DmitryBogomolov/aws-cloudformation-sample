@@ -1,6 +1,6 @@
-from . import helper
-from .yaml import load
-from ..pattern.root import Root
+from ..utils.helper import get_pattern_path
+from ..utils.yaml import load
+from .root import Root
 
 def check_required_fields(source):
     absent = []
@@ -11,7 +11,7 @@ def check_required_fields(source):
         raise Exception('The following fields are not defined: {}'.format(', '.join(absent)))
 
 def create_pattern():
-    source = load(helper.get_pattern_path())
+    source = load(get_pattern_path())
     check_required_fields(source)
     return Root(source)
 

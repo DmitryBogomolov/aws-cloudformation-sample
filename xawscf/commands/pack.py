@@ -7,9 +7,9 @@ from os import path
 import zipfile
 import shutil
 from ..utils import helper
-from ..utils.pattern import pattern
 from ..utils.logger import log
 from ..utils.parallel import run_parallel
+from ..pattern.pattern import pattern
 from .deploy_sources import run as call_deploy_sources
 
 def pack_directory(zf, real_dir, zip_dir):

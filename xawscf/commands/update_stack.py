@@ -6,8 +6,8 @@ import hashlib
 from ..utils import helper
 from ..utils.client import client
 from ..utils.cloudformation import wait, WaiterError
-from ..utils.pattern import pattern
 from ..utils.logger import log
+from ..pattern.pattern import pattern
 
 cf = client('cloudformation')
 

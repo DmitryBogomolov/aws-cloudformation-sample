@@ -5,9 +5,9 @@ Uploads zip archives to s3 bucket.
 from boto3.exceptions import S3UploadFailedError
 from ..utils import helper
 from ..utils.client import client
-from ..utils.pattern import pattern
 from ..utils.logger import log, logError
 from ..utils.parallel import run_parallel
+from ..pattern.pattern import pattern
 from ..utils.cloudformation import get_sources_bucket
 
 s3_client = client('s3')

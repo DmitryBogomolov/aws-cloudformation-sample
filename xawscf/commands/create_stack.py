@@ -3,10 +3,10 @@ Creates cloudformation stack
 '''
 
 from ..utils.client import client
-from ..utils.pattern import pattern
 from ..utils.logger import log
 from ..utils.cloudformation import wait, WaiterError
 from ..pattern.root import Root
+from ..pattern.pattern import pattern
 
 cf = client('cloudformation')
 
