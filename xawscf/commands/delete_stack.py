@@ -6,7 +6,7 @@ from ..utils import helper
 from ..utils.client import client
 from ..utils.cloudformation import wait, WaiterError
 from ..utils.logger import log
-from ..pattern.pattern import pattern
+from ..pattern.pattern import get_pattern
 from .remove_sources import run as call_remove_sources
 
 cf = client('cloudformation')
@@ -20,6 +20,7 @@ def delete_stack(stack_name):
 
 def run(remove_sources=False):
     log('Deleting stack')
+    pattern = get_pattern()
     delete_stack(pattern.get('project'))
     log('Done')
     if remove_sources:

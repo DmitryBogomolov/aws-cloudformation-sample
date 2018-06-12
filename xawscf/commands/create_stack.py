@@ -6,12 +6,13 @@ from ..utils.client import client
 from ..utils.logger import log
 from ..utils.cloudformation import wait, WaiterError
 from ..pattern.root import Root
-from ..pattern.pattern import pattern
+from ..pattern.pattern import get_pattern
 
 cf = client('cloudformation')
 
 def run():
     log('Creating stack')
+    pattern = get_pattern()
     stack_name = pattern.get('project')
     try:
         cf.create_stack(

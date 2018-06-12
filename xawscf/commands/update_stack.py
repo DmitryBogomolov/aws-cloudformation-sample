@@ -7,7 +7,7 @@ from ..utils import helper
 from ..utils.client import client
 from ..utils.cloudformation import wait, WaiterError
 from ..utils.logger import log
-from ..pattern.pattern import pattern
+from ..pattern.pattern import get_pattern
 
 cf = client('cloudformation')
 
@@ -46,6 +46,7 @@ def update_stack(stack_name, template_body):
 
 def run():
     log('Updating stack')
+    pattern = get_pattern()
     stack_name = pattern.get('project')
     template_body = get_template_body()
     cf.validate_template(TemplateBody=template_body)

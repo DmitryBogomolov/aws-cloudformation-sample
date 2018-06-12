@@ -5,7 +5,7 @@ Gets cloudformation stack info.
 from ..utils.client import client, exceptions
 from ..utils.logger import log
 from ..utils.cloudformation import get_stack_info
-from ..pattern.pattern import pattern
+from ..pattern.pattern import get_pattern
 
 cf = client('cloudformation')
 
@@ -19,6 +19,7 @@ FIELDS = (
 )
 
 def run():
+    pattern = get_pattern()
     try:
         stack = get_stack_info(pattern.get('project'))
     except exceptions.ClientError as err:

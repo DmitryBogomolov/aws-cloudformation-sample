@@ -6,7 +6,7 @@ import time
 import json
 from ..utils.client import client
 from ..utils.logger import log, logError
-from ..pattern.pattern import pattern
+from ..pattern.pattern import get_pattern
 
 stepfunctions = client('stepfunctions')
 sts = client('sts')
@@ -26,6 +26,7 @@ def wait(execution_arn):
 
 def execute_state_machine(name, input):
     log('Starting state machine')
+    pattern = get_pattern()
     statemachine = pattern.get_statemachine(name)
     if not statemachine:
         log('State machine *{}* is unknown.', name)
@@ -44,6 +45,7 @@ def execute_state_machine(name, input):
 
 def cancel_state_machine(name):
     log('Canceling state machine')
+    pattern = get_pattern()
     statemachine = pattern.get_statemachine(name)
     if not statemachine:
         log('State machine *{}* is unknown.', name)
