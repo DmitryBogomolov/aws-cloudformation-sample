@@ -1,5 +1,5 @@
 from ..utils.yaml import Custom
-from .utils import try_set_field, make_output, set_sub_list, set_tags_list, sanitize_resource_name
+from .utils import try_set_field, make_output, set_tags_list
 from .base import Base
 from .base_resource import BaseResource
 from .role import Role
@@ -134,6 +134,13 @@ class DynamoDBScalingRole(Role):
         super()._dump_properties(properties)
         statement = properties['Policies'][0]['PolicyDocument']['Statement'][0]
         statement['Resource'] = Custom('!GetAtt', self._args['table'] + '.Arn')
+
+
+def sanitize_resource_name(name):
+    return name.title().replace('-', '').replace('_', '')
+
+def set_sub_list(target, resource, field, SubResouce):
+    target.extend([SubResouce(obj).dump() for obj in resource.get(field, [])])
 
 
 class DynamoDBTable(BaseResource):
