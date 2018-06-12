@@ -1,14 +1,14 @@
 import boto3
-from .pattern import pattern
+from .helper import get_pattern_path
+from .yaml import load
 
 def make_session():
     kwargs = {}
-    profile = pattern.get('profile', '')
-    if profile:
-        kwargs['profile_name'] = profile
-    region = pattern.get('region', '')
-    if region:
-        kwargs['region_name'] = region
+    pattern = load(get_pattern_path())
+    if 'profile' in pattern:
+        kwargs['profile_name'] = pattern['profile']
+    if 'region' in pattern:
+        kwargs['region_name'] = pattern['region']
     return boto3.Session(**kwargs)
 
 session = make_session()

@@ -1,45 +1,19 @@
 '''
-Deploys cloudformation stack.
+Updates cloudformation stack.
 '''
 
-import boto3
 import hashlib
 from ..utils import helper
 from ..utils.client import client
-from ..utils.cf_waiter import wait, WaiterError
-from ..utils.pattern import pattern
+from ..utils.cloudformation import wait, WaiterError
 from ..utils.logger import log
+from ..pattern.pattern import pattern
 
 cf = client('cloudformation')
-
-TEMPLATE_BODY = '''
-AWSTemplateFormatVersion: 2010-09-09
-
-Resources:
-  StackLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: /aws/stack/{project}
-'''
 
 def get_template_body():
     with open(helper.get_processed_template_path()) as f:
         return f.read()
-
-def create_stack(stack_name):
-    try:
-        cf.create_stack(
-            StackName=stack_name,
-            TemplateBody=TEMPLATE_BODY.format(project=stack_name)
-        )
-        log('creating stack')
-        wait('stack_create_complete', stack_name, 5)
-        log('stack is created')
-    except cf.exceptions.AlreadyExistsException:
-        log('stack already exists')
-    except WaiterError as err:
-        log('stack is not created')
-        raise RuntimeError(err.last_response)
 
 def update_stack(stack_name, template_body):
     log('creating change set')
@@ -71,10 +45,8 @@ def update_stack(stack_name, template_body):
         raise RuntimeError(err.last_response)
 
 def run():
-    log('Deploying stack')
+    log('Updating stack')
     stack_name = pattern.get('project')
     template_body = get_template_body()
     cf.validate_template(TemplateBody=template_body)
-    create_stack(stack_name)
     update_stack(stack_name, template_body)
-    log('Done')

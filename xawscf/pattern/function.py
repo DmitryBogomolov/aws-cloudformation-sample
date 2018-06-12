@@ -1,6 +1,7 @@
 from ..utils import helper
 from ..utils.yaml import Custom
-from .utils import get_full_name, try_set_field, make_output
+from ..utils.const import SOURCES_BUCKET
+from ..utils.helper import get_full_name, try_set_field, make_output
 from .base_resource import BaseResource
 
 class LogGroup(BaseResource):
@@ -63,11 +64,10 @@ Properties:
     def _dump_properties(self, properties):
         properties['FunctionName'] = self.full_name
         properties['Handler'] = self.get('handler')
-        properties['CodeUri'] = 's3://{}/{}/{}'.format(
-            self.root.get('bucket'),
-            self.root.get('project'),
-            helper.get_archive_name(self.get('code_uri'))
-        )
+        properties['CodeUri'] = {
+            'Bucket': Custom('!Ref', SOURCES_BUCKET),
+            'Key': helper.get_archive_name(self.get('code_uri'))
+        }
         try_set_field(properties, 'Description', self.get('description', ''))
         try_set_field(properties, 'Runtime',
             self.get('runtime', '') or self.root.get('function_runtime', ''))

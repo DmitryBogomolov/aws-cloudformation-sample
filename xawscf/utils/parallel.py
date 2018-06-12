@@ -10,4 +10,4 @@ def run_parallel(items):
             future = executor.submit(task, *args, **kwargs)
             futures.append(future)
     done_futures, _ = wait(futures)
-    return (future.result() for future in done_futures)
+    return [future.result() for future in done_futures]

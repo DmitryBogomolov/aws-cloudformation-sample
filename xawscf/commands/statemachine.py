@@ -4,16 +4,16 @@ Starts (and cancels) state machine.
 
 import time
 import json
-from ..utils.client import session, client
-from ..utils.pattern import pattern
+from ..utils.client import client
 from ..utils.logger import log, logError
+from ..pattern.pattern import pattern
 
 stepfunctions = client('stepfunctions')
 sts = client('sts')
 
 def get_arn(name):
     return 'arn:aws:states:{}:{}:stateMachine:{}'.format(
-        session.region_name, sts.get_caller_identity()['Account'], name)
+        sts._client_config.region_name, sts.get_caller_identity()['Account'], name)
 
 def wait(execution_arn):
     while True:
