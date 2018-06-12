@@ -1,5 +1,5 @@
 '''
-Removes cloudformation stack.
+Deletes cloudformation stack.
 '''
 
 from ..utils import helper
@@ -19,7 +19,7 @@ def delete_stack(stack_name):
         raise RuntimeError(err.last_response)
 
 def run(remove_sources=False):
-    log('Removing stack')
+    log('Deleting stack')
     delete_stack(pattern.get('project'))
     log('Done')
     if remove_sources:
