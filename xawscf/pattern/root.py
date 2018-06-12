@@ -1,3 +1,4 @@
+from .const import SOURCES_BUCKET
 from .utils import try_set_field
 from .base import Base
 
@@ -9,12 +10,16 @@ class Root(Base):
     TEMPLATE = \
 '''
 AWSTemplateFormatVersion: 2010-09-09
-Transform: AWS::Serverless-2016-10-31
-Resources: {}
-Outputs: {}
-'''
+Resources:
+  {0}:
+    Type: AWS::S3::Bucket
+Outputs:
+  {0}:
+    Value: !Ref {0}
+'''.format(SOURCES_BUCKET)
 
     RESOURCE_TYPES = {}
+
 
     def __init__(self, source):
         super().__init__(source)
@@ -34,6 +39,9 @@ Outputs: {}
 
     def _dump(self, template):
         try_set_field(template, 'Description', self.get('description', ''))
+        # Have to set it here because it cannot be set in `TEMPLATE` as `TEMPLATE` is used
+        # to create stack (before updates) and transfoms are not allowed in CreateStack.
+        template['Transform'] = 'AWS::Serverless-2016-10-31'
         template['Resources'].update(self.get('Resources', {}))
         template['Outputs'].update(self.get('Outputs', {}))
         for obj in self.resources:

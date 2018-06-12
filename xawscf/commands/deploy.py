@@ -6,21 +6,12 @@ import boto3
 import hashlib
 from ..utils import helper
 from ..utils.client import client
-from ..utils.cf_waiter import wait, WaiterError
+from ..utils.cloudformation import wait, WaiterError
 from ..utils.pattern import pattern
 from ..utils.logger import log
+from ..pattern.root import Root
 
 cf = client('cloudformation')
-
-TEMPLATE_BODY = '''
-AWSTemplateFormatVersion: 2010-09-09
-
-Resources:
-  StackLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: /aws/stack/{project}
-'''
 
 def get_template_body():
     with open(helper.get_processed_template_path()) as f:
@@ -30,7 +21,7 @@ def create_stack(stack_name):
     try:
         cf.create_stack(
             StackName=stack_name,
-            TemplateBody=TEMPLATE_BODY.format(project=stack_name)
+            TemplateBody=Root.TEMPLATE
         )
         log('creating stack')
         wait('stack_create_complete', stack_name, 5)
