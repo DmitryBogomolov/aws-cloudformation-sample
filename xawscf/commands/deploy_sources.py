@@ -7,7 +7,7 @@ from ..utils import helper
 from ..utils.client import client
 from ..utils.logger import log, logError
 from ..utils.parallel import run_parallel
-from ..pattern.pattern import pattern
+from ..pattern.pattern import get_pattern
 from ..utils.cloudformation import get_sources_bucket
 
 s3_client = client('s3')
@@ -23,6 +23,7 @@ def deploy_source(code_uri, bucket):
 
 def run(names=None):
     log('Deploying sources')
+    pattern = get_pattern()
     bucket = get_sources_bucket(pattern.get('project'))
     functions = helper.select_functions(pattern, names)
     get_task = lambda code_uri: (deploy_source, [code_uri, bucket])

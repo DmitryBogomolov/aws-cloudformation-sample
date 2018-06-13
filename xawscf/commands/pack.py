@@ -9,7 +9,7 @@ import shutil
 from ..utils import helper
 from ..utils.logger import log
 from ..utils.parallel import run_parallel
-from ..pattern.pattern import pattern
+from ..pattern.pattern import get_pattern
 from .deploy_sources import run as call_deploy_sources
 
 def pack_directory(zf, real_dir, zip_dir):
@@ -46,6 +46,7 @@ def build_packages(pattern, names):
 
 def run(deploy_sources=False, names=None):
     log('Packing sources')
+    pattern = get_pattern()
     helper.ensure_folder()
     build_packages(pattern, names)
     if deploy_sources:

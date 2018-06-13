@@ -7,7 +7,7 @@ from ..utils.client import client
 from ..utils.logger import log, logError
 from ..utils.parallel import run_parallel
 from ..utils.cloudformation import get_sources_bucket
-from ..pattern.pattern import pattern
+from ..pattern.pattern import get_pattern
 
 lambda_client = client('lambda')
 
@@ -20,6 +20,7 @@ def update_source(function, bucket):
         logError(err)
 
 def run(names=None):
+    pattern = get_pattern()
     bucket = get_sources_bucket(pattern.get('project'))
     functions = helper.select_functions(pattern, names)
     get_task = lambda function: (update_source, [function, bucket])

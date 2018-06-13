@@ -9,7 +9,7 @@ import operator
 from ..utils.client import client
 from ..utils.logger import log, logError
 from ..utils.parallel import run_parallel
-from ..pattern.pattern import pattern
+from ..pattern.pattern import get_pattern
 
 logs_client = client('logs')
 
@@ -126,6 +126,7 @@ def print_event(event):
 
 def run(name):
     log('Getting logs')
+    pattern = get_pattern()
     function = pattern.get_function(name)
     if not function:
         log('Function *{}* is unknown.', name)
