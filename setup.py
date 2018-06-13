@@ -14,5 +14,5 @@ setup(
     packages=find_packages(),
     install_requires=['boto3', 'PyYAML'],
     scripts=['bin/xawscf'],
-    test_suite='test'
+    test_suite='run_tests'
 )

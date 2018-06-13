@@ -22,7 +22,7 @@ develop:
 	python3 setup.py develop
 
 test:
-	python3 test.py -v
+	python3 -m unittest discover -p "*_test.py" -v
 
 test-ex:
 	python3 setup.py test
