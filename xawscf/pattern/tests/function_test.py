@@ -9,6 +9,7 @@ class TestFunction(unittest.TestCase):
             'group_name': 'group-1'
         }, None)
         obj.dump({ 'Resources': resources })
+
         self.assertEqual(resources, {
             'Group1': {
                 'Type': 'AWS::Logs::LogGroup',
@@ -25,6 +26,7 @@ class TestFunction(unittest.TestCase):
             'function': 'Function1'
         }, None)
         obj.dump({ 'Resources': resources })
+
         self.assertEqual(resources, {
             'Version1': {
                 'Type': 'AWS::Lambda::Version',

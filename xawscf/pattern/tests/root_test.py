@@ -23,6 +23,7 @@ class TestRoot(unittest.TestCase):
                 'f1': { 'type': 'function' }
             }
         })
+
         self.assertIsNotNone(pattern.get_function('f1'))
         self.assertIsNone(pattern.get_function('f2'))
 
@@ -33,6 +34,7 @@ class TestRoot(unittest.TestCase):
                 's1': { 'type': 'statemachine' }
             }
         })
+
         self.assertIsNotNone(pattern.get_statemachine('s1'))
         self.assertIsNone(pattern.get_statemachine('s2'))
 
@@ -40,6 +42,7 @@ class TestRoot(unittest.TestCase):
         pattern = root.Root({
             'project': 'project-1'
         })
+
         self.assertEqual(pattern.dump(), {
             'AWSTemplateFormatVersion': date(2010, 9, 9),
             'Transform': 'AWS::Serverless-2016-10-31',
