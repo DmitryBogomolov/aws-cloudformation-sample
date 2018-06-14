@@ -27,13 +27,16 @@ Properties: {}
         super()._dump(template, parent_template)
         name = self.name
 
-        StateMachineRole(get_role_name(name), {
+        role_name = get_role_name(name)
+        StateMachineRole(role_name, {
             'statement': self.get('role_statement', [])
         }, self.root).dump(parent_template)
 
         outputs = parent_template['Outputs']
         outputs[name] = make_output(Custom('!GetAtt', name + '.Name'))
         outputs[name + 'Arn'] = make_output(Custom('!Ref', name))
+
+        template['DependsOn'].append(role_name)
 
     def _dump_properties(self, properties):
         properties['StateMachineName'] = self.full_name

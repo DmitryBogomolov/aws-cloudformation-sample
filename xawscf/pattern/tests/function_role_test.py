@@ -7,9 +7,7 @@ class TestFunctionRole(unittest.TestCase):
     def test_dump_FunctionRole(self):
         self.maxDiff = None
         resources = {}
-        obj = function_role.FunctionRole('Role1', {
-
-        }, { 'project': 'project-1' })
+        obj = function_role.FunctionRole('Role1', {}, { 'project': 'project-1' })
         obj.dump({ 'Resources': resources })
 
         self.assertEqual(resources, {
