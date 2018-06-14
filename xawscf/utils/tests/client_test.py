@@ -12,6 +12,7 @@ class TestClient(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         boto3.Session = cls.boto3_Session
+        client.ClientProxy._session = None
 
     def test_real_client_is_not_created_until_method_call(self):
         tester = client.client('tester')

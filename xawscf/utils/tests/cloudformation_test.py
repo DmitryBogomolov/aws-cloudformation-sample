@@ -4,8 +4,7 @@ import boto3
 from ..const import SOURCES_BUCKET
 from ..helper import PATTERN_NAME
 from .. import cloudformation
-
-clients = {}
+from .. import client
 
 class TestCloudFormation(unittest.TestCase):
     @classmethod
@@ -14,17 +13,20 @@ class TestCloudFormation(unittest.TestCase):
             f.write('Test: test')
         cls.boto3_Session = boto3.Session
         cls.cloudformation = type('StubCloudFormation', (), {})()
-        clients = {
+        cls.clients = {
             'cloudformation': cls.cloudformation
         }
+        def client(_, name):
+            return cls.clients[name]
         boto3.Session = type('StubSession', (), {
-            'client': lambda _, name: clients[name]
+            'client': client
         })
 
     @classmethod
     def tearDownClass(cls):
         os.remove(PATTERN_NAME)
         boto3.Session = cls.boto3_Session
+        client.ClientProxy._session = None
 
     def setUp(self):
         self.describe_stacks_data = {};
