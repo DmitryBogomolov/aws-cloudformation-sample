@@ -3,7 +3,7 @@ python:
   - '3.6'
 
 install:
-  - pip3 install -r requirements.txt
+  - make install-requirements
 
 script:
   - make test

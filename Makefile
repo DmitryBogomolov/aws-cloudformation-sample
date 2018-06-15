@@ -15,6 +15,9 @@ stop:
 exec:
 	docker exec -it $(name) sh
 
+install-requirements:
+	pip3 install -r requirements.txt
+
 install:
 	python3 setup.py install
 
