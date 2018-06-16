@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/DmitryBogomolov/aws-cloudformation-sample.svg?branch=master)](https://travis-ci.org/DmitryBogomolov/aws-cloudformation-sample)
+
 # aws-cloudformation-sample
 Different aws-cloudformation resource snippets
 

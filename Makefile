@@ -15,6 +15,9 @@ stop:
 exec:
 	docker exec -it $(name) sh
 
+install-requirements:
+	pip3 install -r requirements.txt
+
 install:
 	python3 setup.py install
 
@@ -22,7 +25,7 @@ develop:
 	python3 setup.py develop
 
 test:
-	python3 test.py -v
+	python3 -m unittest discover -p "*_test.py" -v
 
 test-ex:
 	python3 setup.py test

@@ -1,30 +1,23 @@
-#!/usr/bin/env python3
-
 import unittest
-import os
-
-from xawscf.utils import yaml
-yaml.load = lambda _: { 'project': 'test', 'bucket': 'test' }
-
-from xawscf.utils import helper
-# TODO: utils.pattern.py is imported - find a way to stub it.
-from xawscf.commands import deploy_sources
+from os import path
+from .. import helper
 
 class Tester(object):
     def __init__(self, **kwargs):
         self.data = kwargs
 
-    def get(self, name):
-        return self.data[name]
+    def get(self, name, default=None):
+        return self.data.get(name, default)
+
 
 class TestHelper(unittest.TestCase):
     def test_get_pattern_path(self):
         self.assertEqual(helper.get_pattern_path(),
-            os.path.realpath('pattern.yaml'))
+            path.realpath('pattern.yaml'))
 
     def test_get_processed_template_path(self):
         self.assertEqual(helper.get_processed_template_path(),
-            os.path.realpath('.package/template.yaml'))
+            path.realpath('.package/template.yaml'))
 
     def test_get_archive_name(self):
         cases = [
@@ -43,7 +36,7 @@ class TestHelper(unittest.TestCase):
             helper.get_archive_name('/src/test')
 
     def test_get_archive_path(self):
-        self.assertEqual(helper.get_archive_path('test.zip'), os.path.realpath('.package/test.zip'))
+        self.assertEqual(helper.get_archive_path('test.zip'), path.realpath('.package/test.zip'))
 
     def test_get_code_uri_list(self):
         functions = [
@@ -76,11 +69,27 @@ class TestHelper(unittest.TestCase):
         for filter_value, expected in cases:
             self.assertEqual(list(helper.select_functions(pattern, filter_value)), expected)
 
+    def test_get_full_name(self):
+        pattern = Tester(project='project1')
+        self.assertEqual(helper.get_full_name('func1', pattern), 'project1-func1')
 
-class TestDeploySources(unittest.TestCase):
-    def test_get_s3_key(self):
-        pattern = Tester(project='proj1')
-        self.assertEqual(deploy_sources.get_s3_key(pattern, 'obj1'), 'proj1/obj1')
+    def test_try_set_field(self):
+        target = {}
+        helper.try_set_field(target, 'a', None)
+        helper.try_set_field(target, 'b', 1)
+        self.assertDictEqual(target, { 'b': 1 })
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_make_output(self):
+        self.assertEqual(helper.make_output(2), { 'Value': 2 })
+
+    def test_set_tags_list(self):
+        pattern = Tester(tags={
+            'a': 1,
+            'b': 2
+        })
+        template = { 'Tags': [] }
+        helper.set_tags_list(template, pattern)
+        self.assertEqual(template['Tags'], [
+            { 'Key': 'a', 'Value': 1 },
+            { 'Key': 'b', 'Value': 2 }
+        ])

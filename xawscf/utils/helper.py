@@ -47,5 +47,6 @@ def make_output(value):
     return { 'Value': value }
 
 def set_tags_list(template, resource):
-    tags = [{ 'Key': key, 'Value': value } for key, value in resource.get('tags', {}).items()]
+    items = sorted(resource.get('tags', {}).items(), key=lambda x: x[0])
+    tags = ({ 'Key': key, 'Value': value } for key, value in items)
     template['Tags'].extend(tags)
