@@ -5,15 +5,10 @@ Gets cloudwatch logs for lambda function.
 import re
 from datetime import datetime
 from collections import namedtuple
-import operator
-from ..utils.client import client
+from ..utils.client import get_client
 from ..utils.logger import log, logError
 from ..utils.parallel import run_parallel
 from ..pattern.pattern import get_pattern
-
-logs_client = client('logs')
-
-get_stream_name = operator.itemgetter('logStreamName')
 
 re_stream_name = re.compile(r'^.*\[(.*)\](.*)$')
 re_invocation_start = re.compile(r'^START RequestId: (.*)Version: (.*)$')
@@ -78,12 +73,12 @@ def extract_entry(events, basis):
     entry['items'] = tuple(map(create_log_item, events[start_index + 1:end_index]))
     return LogEntry(**entry), events[report_index + 1:]
 
-def get_stream_events(function_name, group_name, stream_name):
+def get_stream_events(logs, function_name, group_name, stream_name):
     events = []
     kwargs = { 'logGroupName': group_name, 'logStreamNames': [stream_name] }
     instance_version, instance_id = re_stream_name.search(stream_name).groups()
     while True:
-        response = logs_client.filter_log_events(**kwargs)
+        response = logs.filter_log_events(**kwargs)
         events.extend(response['events'])
         nextToken = response.get('nextToken')
         if nextToken:
@@ -105,8 +100,8 @@ def get_stream_events(function_name, group_name, stream_name):
             logError(e)
     return stream_name, entries
 
-def load_all_events(function_name, group_name, stream_names):
-    results = run_parallel(((get_stream_events, (function_name, group_name, stream_name))
+def load_all_events(logs, function_name, group_name, stream_names):
+    results = run_parallel(((get_stream_events, (logs, function_name, group_name, stream_name))
         for stream_name in stream_names))
     events_by_stream = {}
     for stream_name, events in results:
@@ -127,17 +122,18 @@ def print_event(event):
 def run(name):
     log('Getting logs')
     pattern = get_pattern()
+    logs = get_client(pattern, 'logs')
     function = pattern.get_function(name)
     if not function:
         log('Function *{}* is unknown.', name)
         return 1
     group_name = function.log_group_name
     try:
-        streams = logs_client.describe_log_streams(logGroupName=group_name)['logStreams']
-    except logs_client.exceptions.ResourceNotFoundException:
+        streams = logs.describe_log_streams(logGroupName=group_name)['logStreams']
+    except logs.exceptions.ResourceNotFoundException:
         log('Log group *{}* is not found.', group_name)
         return 1
-    stream_names = list(map(get_stream_name, streams))
-    events = load_all_events(name, group_name, stream_names)
+    stream_names = list(map(lambda obj: obj['logStreamName'], streams))
+    events = load_all_events(logs, name, group_name, stream_names)
     for event in events:
         print_event(event)

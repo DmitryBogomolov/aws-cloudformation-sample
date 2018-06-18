@@ -3,15 +3,14 @@ Invokes lambda function.
 '''
 
 import json
-from ..utils.client import client
+from ..utils.client import get_client
 from ..utils.logger import log, logError
 from ..pattern.pattern import get_pattern
-
-lambda_client = client('lambda')
 
 def run(name, payload=None):
     log('Invoking function')
     pattern = get_pattern()
+    lambda_client = get_client(pattern, 'lambda')
     function = pattern.get_function(name)
     if not function:
         log('Function *{}* is unknown.', name)
