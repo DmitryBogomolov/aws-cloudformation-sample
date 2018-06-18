@@ -1,6 +1,6 @@
 import yaml
 from ..utils.yaml import Custom
-from ..utils.helper import get_full_name, try_set_field
+from ..utils.helper import get_full_name
 from .base_resource import BaseResource
 
 
@@ -32,8 +32,8 @@ Properties:
         properties['RoleName'] = Custom('!Sub',
             get_full_name('${AWS::Region}-' + self.name, self.root))
         properties['AssumeRolePolicyDocument']['Statement'][0]['Principal']['Service'] = \
-            self.get('principal_service', '') or self.PRINCIPAL_SERVICE
-        managed_policies = self.get('managed_policies', '') or self.MANAGED_POLICIES
+            self.get('principal_service', self.PRINCIPAL_SERVICE)
+        managed_policies = self.get('managed_policies', self.MANAGED_POLICIES)
         if managed_policies:
             properties['ManagedPolicyArns'] = managed_policies.copy()
         policy = properties['Policies'][0]

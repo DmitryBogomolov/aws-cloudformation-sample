@@ -68,12 +68,13 @@ Properties:
             'Bucket': Custom('!Ref', SOURCES_BUCKET),
             'Key': helper.get_archive_name(self.get('code_uri'))
         }
-        try_set_field(properties, 'Description', self.get('description', ''))
+        try_set_field(properties, 'Description', self.get('description', None))
+        # TODO: Some runtime and timeout must eventually be set - now it is possible to have none.
         try_set_field(properties, 'Runtime',
-            self.get('runtime', '') or self.root.get('function_runtime', ''))
+            self.get('runtime', None) or self.root.get('function_runtime', None))
         try_set_field(properties, 'Timeout',
-            self.get('timeout', '') or self.root.get('function_timeout', ''))
-        try_set_field(properties, 'Role', self.get('role', ''))
+            self.get('timeout', None) or self.root.get('function_timeout', None))
+        try_set_field(properties, 'Role', self.get('role', None))
         properties['Tags'].update(self.get('tags', {}))
         properties['Environment']['Variables'].update(self.get('environment', {}))
         if len(properties['Environment']['Variables']) == 0:

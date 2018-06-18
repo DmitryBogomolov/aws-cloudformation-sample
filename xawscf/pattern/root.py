@@ -38,7 +38,7 @@ Outputs:
                 self.statemachines.append(resource)
 
     def _dump(self, template):
-        try_set_field(template, 'Description', self.get('description', ''))
+        try_set_field(template, 'Description', self.get('description', None))
         # Have to set it here because it cannot be set in `TEMPLATE` as `TEMPLATE` is used
         # to create stack (before updates) and transfoms are not allowed in CreateStack.
         template['Transform'] = 'AWS::Serverless-2016-10-31'
