@@ -10,7 +10,7 @@ from ..utils.cloudformation import get_sources_bucket
 from ..pattern.pattern import get_pattern
 
 def run():
-    log('Removing sources')
+    log('Unloading code')
     pattern = get_pattern()
     s3 = get_client(pattern, 's3')
     objects = []

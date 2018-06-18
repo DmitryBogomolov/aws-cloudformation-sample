@@ -20,7 +20,7 @@ def deploy_source(s3, code_uri, bucket):
         logError(err)
 
 def run(names=None):
-    log('Deploying sources')
+    log('Uploading code')
     pattern = get_pattern()
     s3 = get_client(pattern, 's3')
     bucket = get_sources_bucket(get_client(pattern, 'cloudformation'), pattern.get('project'))

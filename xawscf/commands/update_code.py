@@ -18,6 +18,7 @@ def update_source(lambda_client, function, bucket):
         logError(err)
 
 def run(names=None):
+    log('Updating code')
     pattern = get_pattern()
     bucket = get_sources_bucket(get_client(pattern, 'cloudformation'), pattern.get('project'))
     functions = helper.select_functions(pattern, names)
