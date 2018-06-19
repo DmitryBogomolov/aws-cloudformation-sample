@@ -59,12 +59,10 @@ class TestStateMachine(unittest.TestCase):
             'Properties': {
                 'StateMachineName': 'project1-StateMachine1',
                 'RoleArn': Custom('!GetAtt', 'StateMachine1Role.Arn'),
-                'DefinitionString': {
-                    'Fn::Sub': [
-                        json.dumps({ 'state-1': 1, 'state-2': 2 }, indent=2),
-                        { 'a': 1, 'b': 2 }
-                    ]
-                }
+                'DefinitionString': Custom('!Sub', [
+                    json.dumps({ 'state-1': 1, 'state-2': 2 }, indent=2),
+                    { 'a': 1, 'b': 2 }
+                ])
             },
             'DependsOn': ['StateMachine1Role']
         })

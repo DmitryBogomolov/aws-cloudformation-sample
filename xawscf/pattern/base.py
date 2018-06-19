@@ -1,21 +1,31 @@
 import yaml
 
+DEFAULT = object()
+
 class Base(object):
     TEMPLATE = None
 
     def __init__(self, source):
         self._source = source
 
-    def get(self, name, default=None):
-        value = self._source.get(name, default)
+    def get(self, name, default=DEFAULT):
+        value = self._source.get(name)
         if value is None:
-            raise Exception('Field "{}" is not defined.'.format(name))
+            if default is DEFAULT:
+                raise KeyError('Field "{}" is not defined.'.format(name))
+            else:
+                return default
         return value
 
-    def get_path(self, name):
+    def get_path(self, name, default=DEFAULT):
         obj = self._source
         for item in name.split('.'):
             obj = obj.get(item)
+            if obj is None:
+                if default is DEFAULT:
+                    raise KeyError('Field "{}" in "{}" is not defined.'.format(item, name))
+                else:
+                    return default
         return obj
 
     def dump(self):
@@ -24,4 +34,4 @@ class Base(object):
         return template
 
     def _dump(self, template):
-        raise Exception('Abstract')
+        raise NotImplementedError('_dump')

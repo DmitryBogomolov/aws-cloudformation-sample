@@ -1,15 +1,42 @@
 import yaml
-from collections import namedtuple
 
-Custom = namedtuple('Custom', ('tag', 'value'))
+class Custom(object):
+    def __init__(self, tag, value):
+        self.tag = tag
+        self.value = value
+
+    def __eq__(self, other):
+        return self.tag == other.tag and self.value == other.value
 
 def custom_constructor(loader, node):
-    return Custom(node.tag, node.value)
+    construct = getattr(loader, 'construct_' + node.id)
+    return Custom(node.tag, construct(node))
+
+type_to_representer = {
+    'list': 'sequence',
+    'dict': 'mapping'
+}
 
 def custom_representer(dumper, data):
-    return dumper.represent_scalar(data.tag, data.value)
+    represent = getattr(dumper,
+        'represent_' + type_to_representer.get(type(data.value).__name__, 'scalar'))
+    return represent(data.tag, data.value)
 
-for tag in ('!GetAtt', '!Ref', '!Sub'):
+INTRINSIC_FUNCTIONS = (
+    '!Base64',
+    '!Cidr',
+    '!FindInMap',
+    '!GetAtt',
+    '!GetAZs',
+    '!ImportValue',
+    '!Join',
+    '!Select',
+    '!Split',
+    '!Sub',
+    '!Ref'
+)
+
+for tag in INTRINSIC_FUNCTIONS:
     yaml.add_constructor(tag, custom_constructor)
 yaml.add_representer(Custom, custom_representer)
 

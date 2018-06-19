@@ -19,7 +19,8 @@ class LambdaVersion(BaseResource):
     TEMPLATE = \
 '''
 Type: AWS::Lambda::Version
-Properties: {}
+Properties:
+  FunctionName: !Ref null
 '''
 
     def _dump(self, template, parent_template):
@@ -27,7 +28,7 @@ Properties: {}
         template['DependsOn'].append(self.get('function'))
 
     def _dump_properties(self, properties):
-       properties['FunctionName'] = Custom('!Ref', self.get('function'))
+       properties['FunctionName'].value = self.get('function')
 
 
 class Function(BaseResource):
@@ -35,10 +36,12 @@ class Function(BaseResource):
 '''
 Type: AWS::Serverless::Function
 Properties:
+  CodeUri:
+    Bucket: !Ref {}
   Environment:
-    Variables: {}
-  Tags: {}
-'''
+    Variables: {{}}
+  Tags: {{}}
+'''.format(SOURCES_BUCKET)
 
     TYPE = 'function'
 
@@ -64,16 +67,14 @@ Properties:
     def _dump_properties(self, properties):
         properties['FunctionName'] = self.full_name
         properties['Handler'] = self.get('handler')
-        properties['CodeUri'] = {
-            'Bucket': Custom('!Ref', SOURCES_BUCKET),
-            'Key': helper.get_archive_name(self.get('code_uri'))
-        }
-        try_set_field(properties, 'Description', self.get('description', ''))
+        properties['CodeUri']['Key'] = helper.get_archive_name(self.get('code_uri'))
+        try_set_field(properties, 'Description', self.get('description', None))
+        # TODO: Some runtime and timeout must eventually be set - now it is possible to have none.
         try_set_field(properties, 'Runtime',
-            self.get('runtime', '') or self.root.get('function_runtime', ''))
+            self.get('runtime', None) or self.root.get('function_runtime', None))
         try_set_field(properties, 'Timeout',
-            self.get('timeout', '') or self.root.get('function_timeout', ''))
-        try_set_field(properties, 'Role', self.get('role', ''))
+            self.get('timeout', None) or self.root.get('function_timeout', None))
+        try_set_field(properties, 'Role', self.get('role', None))
         properties['Tags'].update(self.get('tags', {}))
         properties['Environment']['Variables'].update(self.get('environment', {}))
         if len(properties['Environment']['Variables']) == 0:
