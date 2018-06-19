@@ -22,6 +22,6 @@ def run(unload_code=False):
     log('Deleting stack')
     pattern = get_pattern()
     delete_stack(pattern)
-    log('Done')
+    log('stack is deleted')
     if unload_code:
         call_unload_code()

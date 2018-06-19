@@ -18,7 +18,6 @@ def run():
             StackName=stack_name,
             TemplateBody=Root.TEMPLATE
         )
-        log('creating stack')
         wait(cf, 'stack_create_complete', stack_name, 5)
         log('stack is created')
     except cf.exceptions.AlreadyExistsException:
