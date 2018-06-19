@@ -17,10 +17,9 @@ resources:
     statement:
       - Effect: Allow
         Action: S3:PutObject*
-        Resource:
-          Fn::Sub:
-            - ${arn}/*
-            - { arn: !GetAtt DataBucket.Arn }
+        Resource: !Sub
+          - ${arn}/*
+          - { arn: !GetAtt DataBucket.Arn }
     depends_on:
       - DataBucket
 
