@@ -19,7 +19,8 @@ class LambdaVersion(BaseResource):
     TEMPLATE = \
 '''
 Type: AWS::Lambda::Version
-Properties: {}
+Properties:
+  FunctionName: !Ref null
 '''
 
     def _dump(self, template, parent_template):
@@ -27,7 +28,7 @@ Properties: {}
         template['DependsOn'].append(self.get('function'))
 
     def _dump_properties(self, properties):
-       properties['FunctionName'] = Custom('!Ref', self.get('function'))
+       properties['FunctionName'].value = self.get('function')
 
 
 class Function(BaseResource):
@@ -35,10 +36,12 @@ class Function(BaseResource):
 '''
 Type: AWS::Serverless::Function
 Properties:
+  CodeUri:
+    Bucket: !Ref {}
   Environment:
-    Variables: {}
-  Tags: {}
-'''
+    Variables: {{}}
+  Tags: {{}}
+'''.format(SOURCES_BUCKET)
 
     TYPE = 'function'
 
@@ -64,10 +67,7 @@ Properties:
     def _dump_properties(self, properties):
         properties['FunctionName'] = self.full_name
         properties['Handler'] = self.get('handler')
-        properties['CodeUri'] = {
-            'Bucket': Custom('!Ref', SOURCES_BUCKET),
-            'Key': helper.get_archive_name(self.get('code_uri'))
-        }
+        properties['CodeUri']['Key'] = helper.get_archive_name(self.get('code_uri'))
         try_set_field(properties, 'Description', self.get('description', None))
         # TODO: Some runtime and timeout must eventually be set - now it is possible to have none.
         try_set_field(properties, 'Runtime',

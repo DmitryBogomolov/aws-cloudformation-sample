@@ -14,7 +14,8 @@ class StateMachine(BaseResource):
     TEMPLATE = \
 '''
 Type: AWS::StepFunctions::StateMachine
-Properties: {}
+Properties:
+  DefinitionString: !Sub null
 '''
 
     TYPE = 'statemachine'
@@ -45,9 +46,7 @@ Properties: {}
         definition = self.get('definition')
         if isinstance(definition, dict):
             definition = json.dumps(definition, indent=2)
-        properties['DefinitionString'] = {
-            'Fn::Sub': [
-                definition,
-                self.get('definition_args', {})
-            ]
-        }
+        properties['DefinitionString'].value = [
+            definition,
+            self.get('definition_args', {})
+        ]

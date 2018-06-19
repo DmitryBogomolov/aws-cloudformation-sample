@@ -77,9 +77,8 @@ class TestDynamoDBTable(unittest.TestCase):
                     'ScalableDimension': 'dimension-1',
                     'ServiceNamespace': 'dynamodb',
                     'RoleARN': Custom('!GetAtt', 'Role1.Arn'),
-                    'ResourceId': {
-                        'Fn::Sub': ['resource-1', { 'table': Custom('!Ref', 'Table1') }]
-                    },
+                    'ResourceId': Custom('!Sub',
+                        ['resource-1', { 'table': Custom('!Ref', 'Table1') }]),
                     'MinCapacity': 1,
                     'MaxCapacity': 2
                 },
@@ -176,12 +175,12 @@ class TestDynamoDBTable(unittest.TestCase):
         read_target_properties = resources['Table1ReadScalableTarget']['Properties']
         self.assertEqual(read_target_properties['MinCapacity'], 11)
         self.assertEqual(read_target_properties['MaxCapacity'], 21)
-        self.assertEqual(read_target_properties['ResourceId']['Fn::Sub'][0], 'table/${table}')
+        self.assertEqual(read_target_properties['ResourceId'].value[0], 'table/${table}')
 
         write_target_properties = resources['Table1WriteScalableTarget']['Properties']
         self.assertEqual(write_target_properties['MinCapacity'], 12)
         self.assertEqual(write_target_properties['MaxCapacity'], 22)
-        self.assertEqual(write_target_properties['ResourceId']['Fn::Sub'][0], 'table/${table}')
+        self.assertEqual(write_target_properties['ResourceId'].value[0], 'table/${table}')
 
         self.assertEqual(resources['Table1'], {
             'Type': 'AWS::DynamoDB::Table',

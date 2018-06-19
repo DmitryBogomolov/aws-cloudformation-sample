@@ -1,5 +1,4 @@
 import yaml
-from ..utils.yaml import Custom
 from ..utils.helper import get_full_name
 from .base_resource import BaseResource
 
@@ -16,6 +15,7 @@ Properties:
         Principal: {}
         Action: sts:AssumeRole
   Path: /
+  RoleName: !Sub null
   Policies:
     - PolicyDocument:
         Version: 2012-10-17
@@ -29,8 +29,7 @@ Properties:
     TYPE = 'role'
 
     def _dump_properties(self, properties):
-        properties['RoleName'] = Custom('!Sub',
-            get_full_name('${AWS::Region}-' + self.name, self.root))
+        properties['RoleName'].value = get_full_name('${AWS::Region}-' + self.name, self.root)
         properties['AssumeRolePolicyDocument']['Statement'][0]['Principal']['Service'] = \
             self.get('principal_service', self.PRINCIPAL_SERVICE)
         managed_policies = self.get('managed_policies', self.MANAGED_POLICIES)
