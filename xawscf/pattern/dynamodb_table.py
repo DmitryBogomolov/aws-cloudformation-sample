@@ -50,6 +50,10 @@ Type: AWS::ApplicationAutoScaling::ScalableTarget
 Properties:
   ScalableDimension: dynamodb:table:WriteCapacityUnits
   ServiceNamespace: dynamodb
+  RoleARN: !GetAtt
+  ResourceId: !Sub
+    - null
+    - table: !Ref null
 '''
 
     def __init__(self, name, source, root, **kwargs):
@@ -63,13 +67,9 @@ Properties:
 
     def _dump_properties(self, properties):
         properties['ScalableDimension'] = self._args['dimension']
-        properties['RoleARN'] = Custom('!GetAtt', self._args['role'] + '.Arn')
-        properties['ResourceId'] = {
-            'Fn::Sub': [
-                self._args['resource'],
-                { 'table': Custom('!Ref', self._args['table']) }
-            ]
-        }
+        properties['RoleARN'].value = self._args['role'] + '.Arn'
+        properties['ResourceId'].value[0] = self._args['resource']
+        properties['ResourceId'].value[1]['table'].value = self._args['table']
         properties['MinCapacity'] = self.get('min')
         properties['MaxCapacity'] = self.get('max')
 
@@ -86,6 +86,7 @@ Properties:
     ScaleOutCooldown: 60
     PredefinedMetricSpecification:
       PredefinedMetricType: DynamoDBWriteCapacityUtilization
+  ScalingTargetId: !Ref null
 '''
 
     def __init__(self, name, source, root, **kwargs):
@@ -101,7 +102,7 @@ Properties:
         properties['PolicyName'] = self._args['policy_name']
         properties['TargetTrackingScalingPolicyConfiguration'][
             'PredefinedMetricSpecification']['PredefinedMetricType'] = self._args['metric_type']
-        properties['ScalingTargetId'] = Custom('!Ref', self._args['target'])
+        properties['ScalingTargetId'].value = self._args['target']
 
 
 class DynamoDBScalingRole(Role):
@@ -111,6 +112,7 @@ class DynamoDBScalingRole(Role):
   Action:
     - dynamodb:DescribeTable
     - dynamodb:UpdateTable
+  Resource: !GetAtt null
 - Effect: Allow
   Action:
     - cloudwatch:PutMetricAlarm
@@ -130,7 +132,7 @@ class DynamoDBScalingRole(Role):
     def _dump_properties(self, properties):
         super()._dump_properties(properties)
         statement = properties['Policies'][0]['PolicyDocument']['Statement'][0]
-        statement['Resource'] = Custom('!GetAtt', self._args['table'] + '.Arn')
+        statement['Resource'].value = self._args['table'] + '.Arn'
 
 
 def sanitize_resource_name(name):
