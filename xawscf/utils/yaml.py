@@ -1,7 +1,12 @@
 import yaml
-from collections import namedtuple
 
-Custom = namedtuple('Custom', ('tag', 'value'))
+class Custom(object):
+    def __init__(self, tag, value):
+        self.tag = tag
+        self.value = value
+
+    def __eq__(self, other):
+        return self.tag == other.tag and self.value == other.value
 
 def custom_constructor(loader, node):
     construct = getattr(loader, 'construct_' + node.id)

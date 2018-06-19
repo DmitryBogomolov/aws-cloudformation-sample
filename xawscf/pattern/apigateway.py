@@ -8,13 +8,14 @@ class ApiGatewayResouce(BaseResource):
     TEMPLATE = \
 '''
 Type: AWS::ApiGateway::Resource
-Properties: {}
+Properties:
+  RestApiId: !Ref null
 '''
 
     def _dump_properties(self, properties):
         properties['ParentId'] = self.get('parent')
         properties['PathPart'] = self.get('path_part')
-        properties['RestApiId'] = Custom('!Ref', self.get('rest_api'))
+        properties['RestApiId'].value = self.get('rest_api')
 
 
 class ApiGatewayFunctionMethod(BaseResource):
@@ -24,22 +25,21 @@ Type: AWS::ApiGateway::Method
 Properties:
   RequestParameters: {}
   AuthorizationType: NONE
+  RestApiId: !Ref null
   Integration:
     IntegrationHttpMethod: POST
     Type: AWS_PROXY
-    Uri:
-      Fn::Sub:
-        - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${func}/invocations
-        - {}
+    Uri: !Sub
+      - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${func}/invocations
+      - func: !GetAtt null
   MethodResponses: []
 '''
 
     def _dump_properties(self, properties):
         properties['HttpMethod'] = self.get('http_method')
         properties['ResourceId'] = self.get('resource')
-        properties['RestApiId'] = Custom('!Ref', self.get('rest_api'))
-        properties['Integration']['Uri']['Fn::Sub'][1]['func'] = Custom('!GetAtt',
-            self.get('function') + '.Arn')
+        properties['RestApiId'].value = self.get('rest_api')
+        properties['Integration']['Uri'].value[1]['func'].value = self.get('function') + '.Arn'
 
 
 class ApiGatewayPermission(BaseResource):
@@ -50,15 +50,14 @@ Properties:
   FunctionName: !GetAtt ProcessApiRequest.Arn
   Action: lambda:InvokeFunction
   Principal: !Sub apigateway.${AWS::URLSuffix}
-  SourceArn:
-    Fn::Sub:
-      - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${api}/*/*
-      - {}
+  SourceArn: !Sub
+    - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${api}/*/*
+    - api: !Ref null
 '''
 
     def _dump_properties(self, properties):
-        properties['FunctionName'] = Custom('!GetAtt', self.get('function') + '.Arn')
-        properties['SourceArn']['Fn::Sub'][1]['api'] = Custom('!Ref', self.get('rest_api'))
+        properties['FunctionName'].value = self.get('function') + '.Arn'
+        properties['SourceArn'].value[1]['api'].value = self.get('rest_api')
 
 
 class ApiGatewayS3ObjectRole(Role):
@@ -66,10 +65,9 @@ class ApiGatewayS3ObjectRole(Role):
 '''
 - Effect: Allow
   Action: s3:GetObject
-  Resource:
-    Fn::Sub:
-      - arn:aws:s3:::${bucket}
-      - {}
+  Resource: !Sub
+    - arn:aws:s3:::${bucket}
+    - bucket: null
 '''
 
     PRINCIPAL_SERVICE = 'apigateway.amazonaws.com'
@@ -77,7 +75,7 @@ class ApiGatewayS3ObjectRole(Role):
     def _dump_properties(self, properties):
         super()._dump_properties(properties)
         statement = properties['Policies'][0]['PolicyDocument']['Statement'][0]
-        statement['Resource']['Fn::Sub'][1]['bucket'] = self.get('bucket')
+        statement['Resource'].value[1]['bucket'] = self.get('bucket')
 
 
 class ApiGatewayBucketMethod(BaseResource):
@@ -85,6 +83,7 @@ class ApiGatewayBucketMethod(BaseResource):
 '''
 Type: AWS::ApiGateway::Method
 Properties:
+  RestApiId: !Ref null
   RequestParameters:
     method.request.header.Content-Disposition: false
     method.request.header.Content-Type: false
@@ -101,10 +100,10 @@ Properties:
   Integration:
     IntegrationHttpMethod: GET
     Type: AWS
-    Uri:
-      Fn::Sub:
-        - arn:aws:apigateway:${AWS::Region}:s3:path/${bucket}
-        - {}
+    Uri: !Sub
+      - arn:aws:apigateway:${AWS::Region}:s3:path/${bucket}
+      - bucket: null
+    Credentials: !GetAtt null
     PassthroughBehavior: WHEN_NO_MATCH
     RequestParameters:
       integration.request.header.Content-Disposition: method.request.header.Content-Disposition
@@ -123,10 +122,9 @@ Properties:
 
     def _dump_properties(self, properties):
         properties['ResourceId'] = self.get('resource')
-        properties['RestApiId'] = Custom('!Ref', self.get('rest_api'))
-        properties['Integration']['Uri']['Fn::Sub'][1]['bucket'] = self.get('bucket')
-        properties['Integration']['Credentials'] = Custom('!GetAtt',
-            self.get('role_resource') + '.Arn')
+        properties['RestApiId'].value = self.get('rest_api')
+        properties['Integration']['Uri'].value[1]['bucket'] = self.get('bucket')
+        properties['Integration']['Credentials'].value = self.get('role_resource') + '.Arn'
         params = filter(None, map(to_param_part, filter(None, self.get('url').split('/'))))
         request_params = properties['RequestParameters']
         integration_request_params = properties['Integration']['RequestParameters']
@@ -140,7 +138,8 @@ class ApiGatewayDeployment(BaseResource):
     TEMPLATE = \
 '''
 Type: AWS::ApiGateway::Deployment
-Properties: {}
+Properties:
+  RestApiId: !Ref null
 '''
 
     def _dump(self, template, parent_template):
@@ -148,7 +147,7 @@ Properties: {}
         template['DependsOn'].extend(self.get('methods'))
 
     def _dump_properties(self, properties):
-        properties['RestApiId'] = Custom('!Ref', self.get('rest_api'))
+        properties['RestApiId'].value = self.get('rest_api')
         properties['StageName'] = self.get('stage')
 
 
@@ -261,14 +260,12 @@ Properties:
         }, root).dump(parent_template)
 
         outputs = parent_template['Outputs']
-        outputs[name + 'Endpoint'] = make_output({
-            'Fn::Sub': [
-                'https://${gateway}.execute-api.${AWS::Region}.${AWS::URLSuffix}/' + stage,
-                { 'gateway': Custom('!Ref', name) }
-            ]
-        })
+        outputs[name + 'Endpoint'] = make_output(Custom('!Sub', [
+            'https://${gateway}.execute-api.${AWS::Region}.${AWS::URLSuffix}/' + stage,
+            { 'gateway': Custom('!Ref', name) }
+        ]))
         for i, url in enumerate(urls):
-            outputs[name + 'Path' + str(i + 1)] = make_output(url)
+            outputs['{}Path{}'.format(name, i + 1)] = make_output(url)
 
     def _dump_properties(self, properties):
         properties['Name'] = get_full_name(self.name, self.root)
