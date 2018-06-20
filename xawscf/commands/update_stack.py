@@ -8,7 +8,7 @@ from datetime import datetime
 from ..utils import helper
 from ..utils.client import get_client
 from ..utils.cloudformation import wait, WaiterError
-from ..utils.logger import log
+from ..utils.logger import log, logError
 from ..utils.text_painter import paint, colors
 from ..pattern.pattern import get_pattern
 
@@ -69,6 +69,7 @@ def update_stack(cf, stack_name, change_set_name):
     start_time = stack.get('LastUpdatedTime', stack['CreationTime'])
     event_timestamp = start_time
     align = lambda text: text[:31].ljust(32)
+    errors = []
 
     while True:
         events = get_stack_events(cf, stack_name, event_timestamp)
@@ -76,15 +77,22 @@ def update_stack(cf, stack_name, change_set_name):
             event_timestamp = events[0]['Timestamp']
             for event in reversed(events):
                 status = event['ResourceStatus']
+                reason = event.get('ResourceStatusReason', '')
                 # TODO: Use `log` here (after it is updated).
-                print(str((event['Timestamp'] - start_time).seconds).rjust(4),
+                print(str((event['Timestamp'] - start_time).seconds).rjust(3),
                     paint(STATUS_TO_COLOR.get(status, colors.RESET), align(status)),
                     align(event['ResourceType']), align(event['LogicalResourceId']),
-                    event.get('ResourceStatusReason', ''))
+                    reason)
+                if status.endswith('_FAILED') and reason != 'Resource creation cancelled':
+                    errors.append(reason)
         time.sleep(3)
-        status = describe_stack(cf, stack_name)['StackStatus']
-        if status.endswith('_COMPLETE'):
+        if describe_stack(cf, stack_name)['StackStatus'].endswith('_COMPLETE'):
             break
+
+    if len(errors) > 0:
+        log('stack is not updated')
+        logError(';'.join(errors))
+        return 1
 
     log('stack is updated')
 
@@ -97,4 +105,4 @@ def run():
     cf.validate_template(TemplateBody=template_body)
     change_set_name = 'change-set-' + hashlib.sha256(template_body.encode()).hexdigest()[:8]
     if create_change_set(cf, stack_name, change_set_name, template_body):
-        update_stack(cf, stack_name, change_set_name)
+        return update_stack(cf, stack_name, change_set_name)
