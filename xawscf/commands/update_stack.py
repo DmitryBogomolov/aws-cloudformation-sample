@@ -9,7 +9,19 @@ from ..utils import helper
 from ..utils.client import get_client
 from ..utils.cloudformation import wait, WaiterError
 from ..utils.logger import log
+from ..utils.text_painter import paint, colors
 from ..pattern.pattern import get_pattern
+
+STATUS_TO_COLOR = {
+    'CREATE_IN_PROGRESS': colors.ORANGE,
+    'CREATE_COMPLETE': colors.GREEN,
+    'CREATE_FAILED': colors.RED,
+    'DELETE_IN_PROGRESS': colors.ORANGE,
+    'DELETE_COMPLETE': colors.LIGHTGREY,
+    'UPDATE_ROLLBACK_COMPLETE': colors.GREEN,
+    'UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS': colors.RED,
+    'UPDATE_ROLLBACK_IN_PROGRESS': colors.RED
+}
 
 def get_template_body():
     with open(helper.get_processed_template_path()) as f:
@@ -54,15 +66,21 @@ def get_stack_events(cf, stack_name, timestamp):
 def update_stack(cf, stack_name, change_set_name):
     cf.execute_change_set(StackName=stack_name, ChangeSetName=change_set_name)
     stack = describe_stack(cf, stack_name)
-    timestamp = stack.get('LastUpdatedTime', datetime.min)
+    start_time = stack.get('LastUpdatedTime', stack['CreationTime'])
+    event_timestamp = start_time
+    align = lambda text: text[:31].ljust(32)
 
     while True:
-        events = get_stack_events(cf, stack_name, timestamp)
+        events = get_stack_events(cf, stack_name, event_timestamp)
         if len(events) > 0:
-            timestamp = events[0]['Timestamp']
+            event_timestamp = events[0]['Timestamp']
             for event in reversed(events):
-                log('{:32}{:32}{:32}{}', event['ResourceStatus'], event['ResourceType'],
-                    event['LogicalResourceId'], event.get('ResourceStatusReason', ''))
+                status = event['ResourceStatus']
+                # TODO: Use `log` here (after it is updated).
+                print(str((event['Timestamp'] - start_time).seconds).rjust(4),
+                    paint(STATUS_TO_COLOR.get(status, colors.RESET), align(status)),
+                    align(event['ResourceType']), align(event['LogicalResourceId']),
+                    event.get('ResourceStatusReason', ''))
         time.sleep(3)
         status = describe_stack(cf, stack_name)['StackStatus']
         if status.endswith('_COMPLETE'):
