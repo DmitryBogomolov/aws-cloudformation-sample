@@ -28,21 +28,24 @@ def get_template_body():
         return f.read()
 
 def create_change_set(cf, stack_name, change_set_name, template_body):
-    try:
-        cf.create_change_set(
-            StackName=stack_name,
-            Capabilities=('CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM'),
-            TemplateBody=template_body,
-            ChangeSetName=change_set_name
-        )
-        wait(cf, 'change_set_create_complete', stack_name, 5, ChangeSetName=change_set_name)
+    cf.create_change_set(StackName=stack_name, ChangeSetName=change_set_name,
+        TemplateBody=template_body, Capabilities=('CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM'))
+    response = None
+    while True:
+        response = cf.describe_change_set(StackName=stack_name, ChangeSetName=change_set_name)
+        status = response['Status']
+        if status == 'CREATE_COMPLETE' or status == 'FAILED':
+            break
+        time.sleep(3)
+    if status == 'CREATE_COMPLETE' and response['ExecutionStatus'] == 'AVAILABLE':
         log('change set is created')
         return True
-    except WaiterError as err:
-        if err.last_response['StatusReason'] == 'No updates are to be performed.':
-            log('no changes')
-            return False
-        raise RuntimeError(err.last_response)
+    reason = response.get('StatusReason')
+    if reason == 'No updates are to be performed.':
+        log('no changes')
+        return False
+    log('change set is not created')
+    raise Exception('{} {} {}'.format(status, response['ExecutionStatus'], reason))
 
 def describe_stack(cf, stack_name):
     response = cf.describe_stacks(StackName=stack_name)
@@ -84,16 +87,15 @@ def update_stack(cf, stack_name, change_set_name):
                     align(event['ResourceType']), align(event['LogicalResourceId']),
                     reason)
                 if status.endswith('_FAILED') and reason != 'Resource creation cancelled':
-                    errors.append(reason)
+                    errors.append('{} {} {}'.format(
+                        event['ResourceType'], event['LogicalResourceId'], reason))
         time.sleep(3)
         if describe_stack(cf, stack_name)['StackStatus'].endswith('_COMPLETE'):
             break
 
     if len(errors) > 0:
         log('stack is not updated')
-        logError(';'.join(errors))
-        return 1
-
+        raise Exception(';'.join(errors))
     log('stack is updated')
 
 def run():
