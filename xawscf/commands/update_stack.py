@@ -4,7 +4,7 @@ Updates cloudformation stack.
 
 import time
 import hashlib
-from datetime import datetime
+from datetime import datetime, timedelta
 from ..utils import helper
 from ..utils.client import get_client
 from ..utils.cloudformation import wait, WaiterError
@@ -17,10 +17,13 @@ STATUS_TO_COLOR = {
     'CREATE_COMPLETE': colors.GREEN,
     'CREATE_FAILED': colors.RED,
     'DELETE_IN_PROGRESS': colors.ORANGE,
+    'UPDATE_IN_PROGRESS': colors.ORANGE,
+    'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS': colors.ORANGE,
     'DELETE_COMPLETE': colors.LIGHTGREY,
     'UPDATE_ROLLBACK_COMPLETE': colors.GREEN,
     'UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS': colors.RED,
-    'UPDATE_ROLLBACK_IN_PROGRESS': colors.RED
+    'UPDATE_ROLLBACK_IN_PROGRESS': colors.RED,
+    'UPDATE_COMPLETE': colors.GREEN
 }
 
 def get_template_body():
@@ -66,11 +69,13 @@ def get_stack_events(cf, stack_name, timestamp):
             break
     return events
 
-def update_stack(cf, stack_name, change_set_name):
-    cf.execute_change_set(StackName=stack_name, ChangeSetName=change_set_name)
+def watch_stack_status(cf, stack_name):
     stack = describe_stack(cf, stack_name)
+    if not stack['StackStatus'].endswith('_IN_PROGRESS'):
+        return ''
+
     start_time = stack.get('LastUpdatedTime', stack['CreationTime'])
-    event_timestamp = start_time
+    event_timestamp = start_time - timedelta(seconds=1)
     align = lambda text: text[:31].ljust(32)
     errors = []
 
@@ -89,13 +94,18 @@ def update_stack(cf, stack_name, change_set_name):
                 if status.endswith('_FAILED') and reason != 'Resource creation cancelled':
                     errors.append('{} {} {}'.format(
                         event['ResourceType'], event['LogicalResourceId'], reason))
-        time.sleep(3)
         if describe_stack(cf, stack_name)['StackStatus'].endswith('_COMPLETE'):
             break
+        time.sleep(3)
 
-    if len(errors) > 0:
+    return ';'.join(errors) if len(errors) > 0 else ''
+
+def update_stack(cf, stack_name, change_set_name):
+    cf.execute_change_set(StackName=stack_name, ChangeSetName=change_set_name)
+    ret = watch_stack_status(cf, stack_name)
+    if ret:
         log('stack is not updated')
-        raise Exception(';'.join(errors))
+        raise Exception(ret)
     log('stack is updated')
 
 def run():
