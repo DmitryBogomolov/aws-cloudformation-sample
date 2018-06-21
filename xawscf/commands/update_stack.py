@@ -7,8 +7,7 @@ import hashlib
 from datetime import datetime, timedelta
 from ..utils import helper
 from ..utils.client import get_client
-from ..utils.cloudformation import wait, WaiterError
-from ..utils.logger import log, logError
+from ..utils.logger import log
 from ..utils.text_painter import paint, colors
 from ..pattern.pattern import get_pattern
 
