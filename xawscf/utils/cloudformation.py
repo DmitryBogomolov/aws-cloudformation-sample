@@ -1,28 +1,37 @@
 import time
-from datetime import datetime, timedelta
+from datetime import timedelta
+from .client import exceptions
 from .text_painter import paint, colors
 from .const import SOURCES_BUCKET
 
 STATUS_TO_COLOR = {
     'CREATE_IN_PROGRESS': colors.ORANGE,
-    'CREATE_COMPLETE': colors.GREEN,
     'CREATE_FAILED': colors.RED,
+    'CREATE_COMPLETE': colors.GREEN,
+    'ROLLBACK_IN_PROGRESS': colors.ORANGE,
+    'ROLLBACK_FAILED': colors.RED,
+    'ROLLBACK_COMPLETE': colors.GREEN,
     'DELETE_IN_PROGRESS': colors.ORANGE,
+    'DELETE_FAILED': colors.RED,
+    'DELETE_COMPLETE': colors.LIGHTGREY,
     'UPDATE_IN_PROGRESS': colors.ORANGE,
     'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS': colors.ORANGE,
-    'DELETE_COMPLETE': colors.LIGHTGREY,
-    'UPDATE_ROLLBACK_COMPLETE': colors.GREEN,
-    'UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS': colors.RED,
+    'UPDATE_COMPLETE': colors.GREEN,
     'UPDATE_ROLLBACK_IN_PROGRESS': colors.RED,
-    'UPDATE_COMPLETE': colors.GREEN
+    'UPDATE_ROLLBACK_FAILED': colors.RED,
+    'UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS': colors.RED,
+    'UPDATE_ROLLBACK_COMPLETE': colors.GREEN,
+    'REVIEW_IN_PROGRESS': colors.LIGHTGREY
 }
 
 def get_stack_info(cf, stack_name):
-    response = cf.describe_stacks(StackName=stack_name)
-    return response['Stacks'][0]
+    try:
+        return cf.describe_stacks(StackName=stack_name)['Stacks'][0]
+    except:
+        return None
 
-def is_stack_stable(cf, stack_name):
-    return get_stack_info(cf, stack_name)['StackStatus'].endswith('_COMPLETE')
+def is_stack_in_progress(stack):
+    return stack['StackStatus'].endswith('_IN_PROGRESS')
 
 def get_stack_events(cf, stack_name, timestamp):
     events = []
@@ -58,13 +67,13 @@ def watch_stack_status(cf, stack_name):
                 reason = event.get('ResourceStatusReason', '')
                 # TODO: Use `log` here (after it is updated).
                 print(str((event['Timestamp'] - start_time).seconds).rjust(3),
-                    paint(STATUS_TO_COLOR.get(status, colors.RESET), align(status)),
+                    paint(STATUS_TO_COLOR[status], align(status)),
                     align(event['ResourceType']), align(event['LogicalResourceId']),
                     reason)
                 if status.endswith('_FAILED') and reason != 'Resource creation cancelled':
                     errors.append('{} {} {}'.format(
                         event['ResourceType'], event['LogicalResourceId'], reason))
-        if is_stack_stable(cf, stack_name):
+        if not is_stack_in_progress(get_stack_info(cf, stack_name)):
             break
         time.sleep(3)
 
