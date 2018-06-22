@@ -38,7 +38,11 @@ def get_stack_events(cf, stack_name, timestamp):
     args = { 'StackName': stack_name }
     is_valid_event = lambda event: event['Timestamp'] > timestamp
     while True:
-        response = cf.describe_stack_events(**args)
+        # Stack may become deleted during request.
+        try:
+            response = cf.describe_stack_events(**args)
+        except exceptions.ClientError:
+            break
         batch = list(filter(is_valid_event, response['StackEvents']))
         events.extend(batch)
         token = response.get('NextToken')
@@ -50,9 +54,6 @@ def get_stack_events(cf, stack_name, timestamp):
 
 def watch_stack_status(cf, stack_name):
     stack = get_stack_info(cf, stack_name)
-    if not stack['StackStatus'].endswith('_IN_PROGRESS'):
-        return ''
-
     start_time = stack.get('LastUpdatedTime', stack['CreationTime'])
     event_timestamp = start_time - timedelta(seconds=1)
     align = lambda text: text[:31].ljust(32)
@@ -73,8 +74,10 @@ def watch_stack_status(cf, stack_name):
                 if status.endswith('_FAILED') and reason != 'Resource creation cancelled':
                     errors.append('{} {} {}'.format(
                         event['ResourceType'], event['LogicalResourceId'], reason))
-        if not is_stack_in_progress(get_stack_info(cf, stack_name)):
-            break
+        else:
+            stack = get_stack_info(cf, stack_name)
+            if not stack or not is_stack_in_progress(stack):
+                break
         time.sleep(3)
 
     return ';'.join(errors) if len(errors) > 0 else ''
