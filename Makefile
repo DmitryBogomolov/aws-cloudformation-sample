@@ -29,3 +29,6 @@ test:
 
 test-ex:
 	python3 setup.py test
+
+test-container:
+	docker run -it --rm $(name) /bin/sh -c "cd functions && xawscf process"
