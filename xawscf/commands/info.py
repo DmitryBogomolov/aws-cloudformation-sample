@@ -2,7 +2,7 @@
 Gets cloudformation stack info.
 '''
 
-from ..utils.client import get_client, exceptions
+from ..utils.client import get_client
 from ..utils.logger import log
 from ..utils.cloudformation import get_stack_info
 from ..pattern.pattern import get_pattern
@@ -18,11 +18,11 @@ FIELDS = (
 
 def run():
     pattern = get_pattern()
+    stack_name = pattern.get('project')
     cf = get_client(pattern, 'cloudformation')
-    try:
-        stack = get_stack_info(cf, pattern.get('project'))
-    except exceptions.ClientError as err:
-        log(err.response['Error']['Message'])
+    stack = get_stack_info(cf, stack_name)
+    if not stack:
+        log('stack does not exist')
         return 1
     for name, key in FIELDS:
         log('{:20}{}', name, stack.get(key))
