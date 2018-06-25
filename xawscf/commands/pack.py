@@ -10,7 +10,6 @@ from ..utils import helper
 from ..utils.logger import log
 from ..utils.parallel import run_parallel
 from ..pattern.pattern import get_pattern
-from .upload_code import run as call_upload_code
 
 def pack_directory(zf, real_dir, zip_dir):
     for item in os.listdir(real_dir):
@@ -44,10 +43,8 @@ def build_packages(pattern, names):
     functions = helper.select_functions(pattern, names)
     run_parallel(map(get_task, helper.get_code_uri_list(functions)))
 
-def run(upload_code=False, names=None):
+def run(names=None):
     log('Packing sources')
     pattern = get_pattern()
     helper.ensure_folder()
     build_packages(pattern, names)
-    if upload_code:
-        call_upload_code()
