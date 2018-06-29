@@ -30,5 +30,12 @@ test:
 test-ex:
 	python3 setup.py test
 
-test-container:
+run-test-command:
 	docker run -it --rm $(name) /bin/sh -c "cd functions && xawscf process"
+
+test-container:
+	@mkdir .aws
+	@echo '[profile default]\noutput = table\nregion = eu-central-1' > .aws/config
+	@echo '[default]\naws_access_key_id = key\naws_secret_access_key = key' > .aws/credentials
+	$(MAKE) build
+	$(MAKE) run-test-command
