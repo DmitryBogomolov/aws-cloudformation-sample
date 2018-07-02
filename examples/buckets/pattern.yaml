@@ -11,25 +11,18 @@ resources:
     tags:
       Name: DataBucket s3 bucket
 
-  CheckBucketRole:
-    type: function-role
-    statement:
-      - Effect: Allow
-        Action: S3:PutObject*
-        Resource: !Sub
-          - ${arn}/*
-          - { arn: !GetAtt DataBucket.Arn }
-    depends_on:
-      - DataBucket
-
   CheckBucket:
     type: function
     description: Accesses s3 bucket.
     handler: check_bucket.handler
     code_uri: ./sources/check_bucket.py
-    role: !GetAtt CheckBucketRole.Arn
+    role_statement:
+      - Effect: Allow
+        Action: S3:PutObject*
+        Resource: !Sub
+          - ${arn}/*
+          - { arn: !GetAtt DataBucket.Arn }
     environment:
       BUCKET: !Ref DataBucket
     depends_on:
-      - CheckBucketRole
       - DataBucket

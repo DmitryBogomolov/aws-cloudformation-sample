@@ -30,13 +30,13 @@ def run():
 
     if len(pattern.functions) > 0:
         log('Functions')
-        for obj in pattern.functions:
+        for obj in sorted(pattern.functions, key=lambda obj: obj.name):
             log('  {}', obj.name)
         log('')
 
     if len(pattern.statemachines) > 0:
         log('State machines')
-        for obj in pattern.statemachines:
+        for obj in sorted(pattern.statemachines, key=lambda obj: obj.name):
             log('  {}', obj.name)
         log('')
 
