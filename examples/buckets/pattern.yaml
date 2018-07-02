@@ -1,5 +1,4 @@
 project: buckets
-bucket: my-aws-buckets
 
 description: Shows s3 buckets.
 

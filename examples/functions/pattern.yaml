@@ -1,5 +1,4 @@
 project: functions
-bucket: my-aws-buckets
 
 description: Shows functions and roles.
 
