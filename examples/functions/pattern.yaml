@@ -36,57 +36,45 @@ resources:
     tags:
       Name: DoLongTask function
 
-  InvokeCalculateRole:
-    type: function-role
-    statement:
-      - Effect: Allow
-        Action: lambda:InvokeFunction
-        Resource: !GetAtt Calculate.Arn
-
   CallCalculate:
     type: function
     description: Calls 'Calculate' function.
     <<: *COMMON
-    role: !GetAtt InvokeCalculateRole.Arn
+    role_statement:
+      - Effect: Allow
+        Action: lambda:InvokeFunction
+        Resource: !GetAtt Calculate.Arn
     environment:
       FUNCTION: !Ref Calculate
       PAYLOAD: '{ "a": 1.2, "b": 2.3 }'
     tags:
       Name: CallCalculate function
     depends_on:
-      - InvokeCalculateRole
-
-  InvokeRaiseErrorRole:
-    type: function-role
-    statement:
-      - Effect: Allow
-        Action: lambda:InvokeFunction
-        Resource: !GetAtt RaiseError.Arn
+      - Calculate
 
   CallRaiseError:
     type: function
     description: Calls 'RaiseError' function.
     <<: *COMMON
-    role: !GetAtt InvokeRaiseErrorRole.Arn
+    role_statement:
+      - Effect: Allow
+        Action: lambda:InvokeFunction
+        Resource: !GetAtt RaiseError.Arn
     environment:
       FUNCTION: !Ref RaiseError
     tags:
       Name: CallRaiseError function
     depends_on:
-      - InvokeRaiseErrorRole
-
-  InvokeDoLongTaskRole:
-    type: function-role
-    statement:
-      - Effect: Allow
-        Action: lambda:InvokeFunction
-        Resource: !GetAtt DoLongTask.Arn
+      - RaiseError
 
   CallDoLongTask:
     type: function
     description: Calls 'DoLongTask' function.
     <<: *COMMON
-    role: !GetAtt InvokeDoLongTaskRole.Arn
+    role_statement:
+      - Effect: Allow
+        Action: lambda:InvokeFunction
+        Resource: !GetAtt DoLongTask.Arn
     timeout: 30
     environment:
       FUNCTION: !Ref DoLongTask
@@ -94,7 +82,7 @@ resources:
     tags:
       Name: CallDoLongTask function
     depends_on:
-      - InvokeDoLongTaskRole
+      - DoLongTask
 
   ComplexCalculate:
     type: function

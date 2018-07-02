@@ -3,6 +3,7 @@ from ..utils.yaml import Custom
 from ..utils.const import SOURCES_BUCKET
 from ..utils.helper import get_full_name, try_set_field, make_output
 from .base_resource import BaseResource
+from .role import Role
 
 class LogGroup(BaseResource):
     TEMPLATE = \
@@ -29,6 +30,11 @@ Properties:
 
     def _dump_properties(self, properties):
        properties['FunctionName'].value = self.get('function')
+
+
+class FunctionRole(Role):
+    PRINCIPAL_SERVICE = 'lambda.amazonaws.com'
+    MANAGED_POLICIES = ['arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole']
 
 
 class Function(BaseResource):
@@ -59,6 +65,16 @@ Properties:
         LogGroup(log_name, { 'group_name': self.log_group_name }, self.root).dump(parent_template)
         LambdaVersion(version_name, { 'function': name }, self.root).dump(parent_template)
 
+        role_statement = self.get('role_statement', None)
+        if role_statement:
+            role_name = name + 'Role'
+            FunctionRole(role_name, {
+                'statement': role_statement,
+                'depends_on': self.get('depends_on', None)
+            }, self.root).dump(parent_template)
+            template['Properties']['Role'] = Custom('!GetAtt', role_name + '.Arn')
+            template['DependsOn'].append(role_name)
+
         parent_template['Outputs'][name] = make_output(Custom('!Ref', name))
         parent_template['Outputs'][version_name] = make_output(Custom('!Ref', version_name))
 
@@ -74,7 +90,8 @@ Properties:
             self.get('runtime', None) or self.root.get('function_runtime', None))
         try_set_field(properties, 'Timeout',
             self.get('timeout', None) or self.root.get('function_timeout', None))
-        try_set_field(properties, 'Role', self.get('role', None))
+        try_set_field(properties, 'Role',
+            self.get('role', None) if not self.get('role_statement', None) else None)
         properties['Tags'].update(self.get('tags', {}))
         properties['Environment']['Variables'].update(self.get('environment', {}))
         if len(properties['Environment']['Variables']) == 0:
