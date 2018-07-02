@@ -1,5 +1,4 @@
 project: statemachines
-bucket: my-aws-buckets
 
 description: Shows state machines.
 

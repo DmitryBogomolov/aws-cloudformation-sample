@@ -1,5 +1,4 @@
 project: tables
-bucket: my-aws-buckets
 
 description: Shows dynamodb tables.
 

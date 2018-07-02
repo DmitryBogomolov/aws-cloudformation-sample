@@ -1,5 +1,4 @@
 project: apigateways
-bucket: my-aws-buckets
 
 description: Shows api gateways.
 
