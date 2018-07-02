@@ -1,9 +1,17 @@
+sudo: required
+
 language: python
 python:
   - '3.6'
+
+services:
+  - docker
+
+git:
+  depth: 3
 
 install:
   - make install-requirements
 
 script:
-  - make test
+  - make test && ./travis-check-container.sh
