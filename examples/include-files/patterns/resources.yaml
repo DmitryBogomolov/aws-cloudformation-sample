@@ -1,0 +1,2 @@
+Function1: !include function1.yaml
+Function2: !include function2.yaml

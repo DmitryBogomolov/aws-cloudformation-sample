@@ -1,3 +1,4 @@
+from os import getcwd, path
 import yaml
 
 class Custom(object):
@@ -39,6 +40,17 @@ INTRINSIC_FUNCTIONS = (
 for tag in INTRINSIC_FUNCTIONS:
     yaml.add_constructor(tag, custom_constructor)
 yaml.add_representer(Custom, custom_representer)
+
+CWD = path.join(getcwd(), '')
+
+def include_file_constructor(loader, node):
+    value = loader.construct_scalar(node)
+    path_to_file = path.realpath(path.join(path.dirname(loader.stream.name), value))
+    if path.commonprefix([CWD, path_to_file]) != CWD:
+        raise Exception('File path *{}* is not valid'.format(value))
+    return load(path_to_file)
+
+yaml.add_constructor('!include', include_file_constructor)
 
 def load(file_path):
     with open(file_path, 'r') as f:

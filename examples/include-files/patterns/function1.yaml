@@ -1,0 +1,5 @@
+type: function
+handler: index.handler
+code_uri: sources/index.py
+environment:
+  VALUE: Function 1

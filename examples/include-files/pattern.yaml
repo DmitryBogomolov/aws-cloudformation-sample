@@ -1,0 +1,8 @@
+project: include-files
+
+description: Shows how to include other files.
+
+function_runtime: python3.6
+function_timeout: 5
+
+resources: !include patterns/resources.yaml

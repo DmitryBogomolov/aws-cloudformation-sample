@@ -64,3 +64,19 @@ class TestYaml(unittest.TestCase):
                 'd': yaml.Custom('!GetAtt', 'e')
             }])
         }, "a: !Sub\n- test\n- b: !Ref 'c'\n  d: !GetAtt 'e'\n")
+
+    def test_load_with_included(self):
+        with open('file1.yaml', 'w') as f:
+            f.write('b: test')
+        try:
+            self.check_load('a: !include file1.yaml', { 'a': { 'b': 'test' } })
+        finally:
+            os.remove('file1.yaml')
+
+    def test_load_with_included_not_exist(self):
+        with self.assertRaisesRegex(Exception, 'No such file or directory'):
+            self.check_load('a: !include file1.yaml', None)
+
+    def test_load_with_included_out_of_dir(self):
+        with self.assertRaisesRegex(Exception, 'File path \*..\/file1.yaml\* is not valid'):
+            self.check_load('a: !include ../file1.yaml', None)
