@@ -21,9 +21,9 @@ def wait(stepfunctions, execution_arn):
             time.sleep(1)
     return response
 
-def execute_state_machine(name, input):
+def execute_state_machine(name, input, pattern_path):
     log('Starting state machine')
-    pattern = get_pattern()
+    pattern = get_pattern(pattern_path)
     statemachine = pattern.get_statemachine(name)
     if not statemachine:
         log('State machine *{}* is unknown.', name)
@@ -41,9 +41,9 @@ def execute_state_machine(name, input):
     output = json.loads(response['output'])
     log(json.dumps(output, indent=2))
 
-def cancel_state_machine(name):
+def cancel_state_machine(name, pattern_path):
     log('Canceling state machine')
-    pattern = get_pattern()
+    pattern = get_pattern(pattern_path)
     statemachine = pattern.get_statemachine(name)
     if not statemachine:
         log('State machine *{}* is unknown.', name)
@@ -59,8 +59,8 @@ def cancel_state_machine(name):
             executionArn=obj['executionArn'], error='ManuallyStopped', cause='Stopped from script')
     log('Done')
 
-def run(name, input=None, cancel=False):
+def run(name, input=None, cancel=False, pattern_path=None):
     if cancel:
-        cancel_state_machine(name)
+        cancel_state_machine(name, pattern_path)
     else:
-        execute_state_machine(name, input)
+        execute_state_machine(name, input, pattern_path)

@@ -119,9 +119,9 @@ def print_event(event):
     log(FOOTER_TEMPLATE.format(e=event))
     log('')
 
-def run(name):
+def run(name, pattern_path=None):
     log('Getting logs')
-    pattern = get_pattern()
+    pattern = get_pattern(pattern_path)
     logs = get_client(pattern, 'logs')
     function = pattern.get_function(name)
     if not function:

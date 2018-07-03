@@ -42,9 +42,9 @@ def update_stack(cf, stack_name, change_set_name):
         raise Exception(ret)
     log('stack is updated')
 
-def run():
+def run(pattern_path=None):
     log('Updating stack')
-    pattern = get_pattern()
+    pattern = get_pattern(pattern_path)
     stack_name = pattern.get('project')
     template_body = get_template_body()
     cf = get_client(pattern, 'cloudformation')

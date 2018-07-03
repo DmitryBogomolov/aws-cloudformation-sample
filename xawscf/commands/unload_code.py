@@ -9,9 +9,9 @@ from ..utils.logger import log
 from ..utils.cloudformation import get_sources_bucket
 from ..pattern.pattern import get_pattern
 
-def run():
+def run(pattern_path=None):
     log('Unloading code')
-    pattern = get_pattern()
+    pattern = get_pattern(pattern_path)
     s3 = get_client(pattern, 's3')
     objects = []
     bucket = get_sources_bucket(get_client(pattern, 'cloudformation'), pattern.get('project'))

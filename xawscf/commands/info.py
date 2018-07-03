@@ -16,8 +16,8 @@ FIELDS = (
     ('Last update time', 'LastUpdatedTime')
 )
 
-def run():
-    pattern = get_pattern()
+def run(pattern_path=None):
+    pattern = get_pattern(pattern_path)
     stack_name = pattern.get('project')
     cf = get_client(pattern, 'cloudformation')
     stack = get_stack_info(cf, stack_name)

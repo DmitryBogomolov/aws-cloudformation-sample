@@ -8,9 +8,9 @@ from ..utils.cloudformation import get_stack_info, is_stack_in_progress, watch_s
 from ..utils.logger import log
 from ..pattern.pattern import get_pattern
 
-def run():
+def run(pattern_path=None):
     log('Deleting stack')
-    pattern = get_pattern()
+    pattern = get_pattern(pattern_path)
     stack_name = pattern.get('project')
     cf = get_client(pattern, 'cloudformation')
     stack = get_stack_info(cf, stack_name)

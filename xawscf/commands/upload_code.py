@@ -19,9 +19,9 @@ def deploy_source(s3, code_uri, bucket):
     except S3UploadFailedError as err:
         logError(err)
 
-def run(names=None):
+def run(names=None, pattern_path=None):
     log('Uploading code')
-    pattern = get_pattern()
+    pattern = get_pattern(pattern_path)
     s3 = get_client(pattern, 's3')
     bucket = get_sources_bucket(get_client(pattern, 'cloudformation'), pattern.get('project'))
     functions = helper.select_functions(pattern, names)

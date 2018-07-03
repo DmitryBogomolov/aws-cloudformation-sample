@@ -43,8 +43,8 @@ def build_packages(pattern, names):
     functions = helper.select_functions(pattern, names)
     run_parallel(map(get_task, helper.get_code_uri_list(functions)))
 
-def run(names=None):
+def run(names=None, pattern_path=None):
     log('Packing sources')
-    pattern = get_pattern()
+    pattern = get_pattern(pattern_path)
     helper.ensure_folder()
     build_packages(pattern, names)

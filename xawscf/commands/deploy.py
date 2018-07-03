@@ -9,11 +9,11 @@ from ..commands.create_stack import run as call_create_stack
 from ..commands.upload_code import run as call_upload_code
 from ..commands.update_stack import run as call_update_stack
 
-def run():
+def run(pattern_path=None):
     log('Deploying')
-    call_process()
-    call_pack()
-    call_create_stack()
-    call_upload_code()
-    call_update_stack()
+    call_process(pattern_path)
+    call_pack(pattern_path)
+    call_create_stack(pattern_path)
+    call_upload_code(pattern_path)
+    call_update_stack(pattern_path)
     log('Deployed')

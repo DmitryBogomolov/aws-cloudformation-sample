@@ -17,9 +17,9 @@ def update_source(lambda_client, function, bucket):
     except Exception as err:
         logError(err)
 
-def run(names=None):
+def run(names=None, pattern_path=None):
     log('Updating code')
-    pattern = get_pattern()
+    pattern = get_pattern(pattern_path)
     bucket = get_sources_bucket(get_client(pattern, 'cloudformation'), pattern.get('project'))
     functions = helper.select_functions(pattern, names)
     lambda_client = get_client(pattern, 'lambda')

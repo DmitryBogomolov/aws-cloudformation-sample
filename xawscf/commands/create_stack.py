@@ -8,9 +8,9 @@ from ..utils.cloudformation import get_stack_info, watch_stack_status
 from ..pattern.root import Root
 from ..pattern.pattern import get_pattern
 
-def run():
+def run(pattern_path=None):
     log('Creating stack')
-    pattern = get_pattern()
+    pattern = get_pattern(pattern_path)
     stack_name = pattern.get('project')
     cf = get_client(pattern, 'cloudformation')
     if get_stack_info(cf, stack_name):

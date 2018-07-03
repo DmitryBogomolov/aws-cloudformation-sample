@@ -7,9 +7,9 @@ from ..utils.logger import log
 from ..utils.yaml import save
 from ..pattern.pattern import get_pattern
 
-def run():
-    log('Processing {}', helper.get_pattern_path())
-    pattern = get_pattern()
+def run(pattern_path=None):
+    log('Processing')
+    pattern = get_pattern(pattern_path)
     helper.ensure_folder()
     template = pattern.dump()
     file_path = helper.get_processed_template_path()
