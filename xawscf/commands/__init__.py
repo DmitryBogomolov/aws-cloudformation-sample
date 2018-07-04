@@ -35,8 +35,10 @@ def make_command(name, func):
             param.default = parameter.default
         parameters.append(param)
 
+    name = func.__module__.split('.')[-1]
+
     def execute(**kwargs):
-        log(func.__module__)
+        log('* {} *'.format(name))
         pattern = get_pattern(kwargs.get('pattern'))
         kwargs = kwargs.copy()
         kwargs['pattern'] = pattern
