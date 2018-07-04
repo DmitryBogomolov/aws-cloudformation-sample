@@ -7,9 +7,6 @@ TEMPLATE_NAME = 'template.yaml'
 def ensure_folder():
     makedirs(PACKAGE_PATH, exist_ok=True)
 
-def get_pattern_path():
-    return path.abspath(PATTERN_NAME)
-
 def get_archive_name(code_uri):
     norm = path.relpath(path.normcase(path.normpath(code_uri)))
     if norm.startswith('..'):

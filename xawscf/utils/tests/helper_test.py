@@ -11,10 +11,6 @@ class Tester(object):
 
 
 class TestHelper(unittest.TestCase):
-    def test_get_pattern_path(self):
-        self.assertEqual(helper.get_pattern_path(),
-            path.realpath('pattern.yaml'))
-
     def test_get_processed_template_path(self):
         self.assertEqual(helper.get_processed_template_path(),
             path.realpath('.package/template.yaml'))

@@ -2,17 +2,15 @@
 Packs lambda sources into zip archives.
 '''
 
-import os
-from os import path
+from os import listdir, path
 import zipfile
 import shutil
 from ..utils import helper
 from ..utils.logger import log
 from ..utils.parallel import run_parallel
-from ..pattern.pattern import get_pattern
 
 def pack_directory(zf, real_dir, zip_dir):
-    for item in os.listdir(real_dir):
+    for item in listdir(real_dir):
         path_to_item = path.join(real_dir, item)
         zip_item = path.join(zip_dir, item)
         if path.isfile(path_to_item):
@@ -43,8 +41,6 @@ def build_packages(pattern, names):
     functions = helper.select_functions(pattern, names)
     run_parallel(map(get_task, helper.get_code_uri_list(functions)))
 
-def run(names=None):
-    log('Packing sources')
-    pattern = get_pattern()
+def run(pattern, names=None):
     helper.ensure_folder()
     build_packages(pattern, names)

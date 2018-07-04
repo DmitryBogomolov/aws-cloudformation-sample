@@ -8,7 +8,6 @@ from ..utils import helper
 from ..utils.client import get_client
 from ..utils.logger import log, logError
 from ..utils.cloudformation import get_stack_info, is_stack_in_progress, watch_stack_status
-from ..pattern.pattern import get_pattern
 
 def get_template_body():
     with open(helper.get_processed_template_path()) as f:
@@ -42,9 +41,7 @@ def update_stack(cf, stack_name, change_set_name):
         raise Exception(ret)
     log('stack is updated')
 
-def run():
-    log('Updating stack')
-    pattern = get_pattern()
+def run(pattern):
     stack_name = pattern.get('project')
     template_body = get_template_body()
     cf = get_client(pattern, 'cloudformation')
