@@ -1,8 +1,13 @@
-def log(message, *args, **kwargs):
-    entry = message
-    if len(args) + len(kwargs) > 0:
-        entry = message.format(*args, **kwargs)
-    print(entry)
+import logging
+
+logger = logging.getLogger(__name__.split('.')[0])
+logger.setLevel(logging.INFO)
+
+handler = logging.StreamHandler()
+logger.addHandler(handler)
+
+def log(message):
+    logger.info(message)
 
 def logError(err):
-    print(err)
+    logger.error(err)
