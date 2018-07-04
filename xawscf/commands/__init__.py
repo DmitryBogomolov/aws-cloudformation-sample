@@ -2,7 +2,7 @@ import sys
 from os import listdir, path
 import importlib
 import inspect
-from ..utils.logger import log
+from ..utils.logger import log, logError
 from ..pattern.pattern import get_pattern
 
 class Parameter(object):
@@ -26,7 +26,9 @@ def is_entry_function(obj):
 
 def make_command(name, func):
     signature = inspect.signature(func)
-    parameters = []
+    pattern_parameter = Parameter('pattern')
+    pattern_parameter.default = None
+    parameters = [pattern_parameter]
     for parameter in signature.parameters.values():
         if parameter.name == 'pattern':
             continue
@@ -39,7 +41,11 @@ def make_command(name, func):
 
     def execute(**kwargs):
         log('* {} *'.format(name))
-        pattern = get_pattern(kwargs.get('pattern'))
+        try:
+            pattern = get_pattern(kwargs.get('pattern'))
+        except FileNotFoundError as err:
+            logError('File *{}* does not exist.'.format(err.filename))
+            return 1
         kwargs = kwargs.copy()
         kwargs['pattern'] = pattern
         return func(**kwargs)
