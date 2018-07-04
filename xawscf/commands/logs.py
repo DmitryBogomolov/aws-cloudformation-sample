@@ -8,7 +8,6 @@ from collections import namedtuple
 from ..utils.client import get_client
 from ..utils.logger import log, logError
 from ..utils.parallel import run_parallel
-from ..pattern.pattern import get_pattern
 
 re_stream_name = re.compile(r'^.*\[(.*)\](.*)$')
 re_invocation_start = re.compile(r'^START RequestId: (.*)Version: (.*)$')
@@ -119,9 +118,7 @@ def print_event(event):
     log(FOOTER_TEMPLATE.format(e=event))
     log('')
 
-def run(name, pattern_path=None):
-    log('Getting logs')
-    pattern = get_pattern(pattern_path)
+def run(pattern, name):
     logs = get_client(pattern, 'logs')
     function = pattern.get_function(name)
     if not function:

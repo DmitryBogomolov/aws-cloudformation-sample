@@ -5,11 +5,8 @@ Invokes lambda function.
 import json
 from ..utils.client import get_client
 from ..utils.logger import log, logError
-from ..pattern.pattern import get_pattern
 
-def run(name, payload=None, pattern_path=None):
-    log('Invoking function')
-    pattern = get_pattern(pattern_path)
+def run(pattern, name, payload=None):
     lambda_client = get_client(pattern, 'lambda')
     function = pattern.get_function(name)
     if not function:

@@ -7,11 +7,8 @@ from ..utils import helper
 from ..utils.client import get_client
 from ..utils.logger import log
 from ..utils.cloudformation import get_sources_bucket
-from ..pattern.pattern import get_pattern
 
-def run(pattern_path=None):
-    log('Unloading code')
-    pattern = get_pattern(pattern_path)
+def run(pattern):
     s3 = get_client(pattern, 's3')
     objects = []
     bucket = get_sources_bucket(get_client(pattern, 'cloudformation'), pattern.get('project'))

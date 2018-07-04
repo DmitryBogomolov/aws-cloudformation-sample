@@ -6,7 +6,6 @@ import time
 import json
 from ..utils.client import get_client
 from ..utils.logger import log, logError
-from ..pattern.pattern import get_pattern
 
 def get_arn(sts, name):
     return 'arn:aws:states:{}:{}:stateMachine:{}'.format(
@@ -21,46 +20,30 @@ def wait(stepfunctions, execution_arn):
             time.sleep(1)
     return response
 
-def execute_state_machine(name, input, pattern_path):
-    log('Starting state machine')
-    pattern = get_pattern(pattern_path)
-    statemachine = pattern.get_statemachine(name)
-    if not statemachine:
-        log('State machine *{}* is unknown.', name)
-        return 1
-    kwargs = { 'stateMachineArn': get_arn(get_client(pattern, 'sts'), statemachine.full_name) }
-    if input:
-        kwargs['input'] = input
-
-    stepfunctions = get_client(pattern, 'stepfunctions')
-    response = stepfunctions.start_execution(**kwargs)
-    response = wait(stepfunctions, response['executionArn'])
-    if response['status'] != 'SUCCEEDED':
-        log(response['status'])
-        return 1
-    output = json.loads(response['output'])
-    log(json.dumps(output, indent=2))
-
-def cancel_state_machine(name, pattern_path):
-    log('Canceling state machine')
-    pattern = get_pattern(pattern_path)
+def run(pattern, name, input=None, cancel=False):
     statemachine = pattern.get_statemachine(name)
     if not statemachine:
         log('State machine *{}* is unknown.', name)
         return 1
 
     stepfunctions = get_client(pattern, 'stepfunctions')
-    response = stepfunctions.list_executions(
-        stateMachineArn=get_arn(get_client(pattern, 'sts'), statemachine.full_name),
-        statusFilter='RUNNING'
-    )
-    for obj in response['executions']:
-        stepfunctions.stop_execution(
-            executionArn=obj['executionArn'], error='ManuallyStopped', cause='Stopped from script')
-    log('Done')
-
-def run(name, input=None, cancel=False, pattern_path=None):
     if cancel:
-        cancel_state_machine(name, pattern_path)
+        response = stepfunctions.list_executions(
+            stateMachineArn=get_arn(get_client(pattern, 'sts'), statemachine.full_name),
+            statusFilter='RUNNING'
+        )
+        for obj in response['executions']:
+            stepfunctions.stop_execution(executionArn=obj['executionArn'],
+                error='ManuallyStopped', cause='Stopped from script')
+        log('canceled')
     else:
-        execute_state_machine(name, input, pattern_path)
+        kwargs = { 'stateMachineArn': get_arn(get_client(pattern, 'sts'), statemachine.full_name) }
+        if input:
+            kwargs['input'] = input
+        response = stepfunctions.start_execution(**kwargs)
+        response = wait(stepfunctions, response['executionArn'])
+        if response['status'] != 'SUCCEEDED':
+            log(response['status'])
+            return 1
+        output = json.loads(response['output'])
+        log(json.dumps(output, indent=2))
