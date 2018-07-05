@@ -8,6 +8,7 @@ from datetime import datetime
 from collections import namedtuple
 from ..utils.client import get_client
 from ..utils.parallel import run_parallel
+from ..utils.text_painter import colors, paint
 
 logger = getLogger(__name__)
 
@@ -26,17 +27,20 @@ LogEntry = namedtuple('LogEntry', [
 
 LogItem = namedtuple('LogItem', ['timestamp', 'message'])
 
-colors = {
-    'RESET': '\033[0m',
-    'GREEN': '\033[32m',
-    'YELLOW': '\033[93m',
-    'ORANGE': '\033[33m',
-    'BLUE': '\033[34m'
-}
-
-HEADER_TEMPLATE = '{GREEN}{{e.instance_id}} {YELLOW}{{e.request_id}} {BLUE}{{t}} {{e.span}}{RESET}'.format(**colors)
-FOOTER_TEMPLATE = '{BLUE}{{e.duration}} {ORANGE}{{e.memory_size}}{RESET}'.format(**colors)
-ITEM_TEMPLATE = '{BLUE}+{{offset}}{RESET} {{message}}'.format(**colors)
+HEADER_TEMPLATE = '{instance_id} {request_id} {timestamp} {span}'.format(
+    instance_id=paint(colors.GREEN, '{e.instance_id}'),
+    request_id=paint(colors.YELLOW, '{e.request_id}'),
+    timestamp=paint(colors.BLUE, '{timestamp}'),
+    span=paint(colors.BLUE, '{e.span}')
+)
+FOOTER_TEMPLATE = '{duration} {memory_size}'.format(
+    duration=paint(colors.BLUE, '{e.duration}'),
+    memory_size=paint(colors.ORANGE, '{e.memory_size}')
+)
+ITEM_TEMPLATE = '{offset} {message}'.format(
+    offset=paint(colors.BLUE, '{offset:6}'),
+    message='{message}'
+)
 
 def find_index(start, end, regexp, events):
     for i in range(start, end):
@@ -114,7 +118,7 @@ def load_all_events(logs, function_name, group_name, stream_names):
 
 def print_event(event):
     timestamp = datetime.fromtimestamp(event.start / 1E3).replace(microsecond=0).isoformat()
-    logger.info(HEADER_TEMPLATE.format(e=event, t=timestamp))
+    logger.info(HEADER_TEMPLATE.format(e=event, timestamp=timestamp))
     for item in event.items:
         logger.info(ITEM_TEMPLATE.format(
             offset=item.timestamp - event.start, message=item.message.strip()))
