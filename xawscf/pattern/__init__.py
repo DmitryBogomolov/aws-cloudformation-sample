@@ -7,14 +7,12 @@ from .dynamodb_table import DynamoDBTable
 from .apigateway import ApiGateway
 from .statemachine import StateMachine
 
-resources = [
+for resource in [
     Function,
     Role,
     Bucket,
     DynamoDBTable,
     ApiGateway,
     StateMachine
-]
-
-for resource in resources:
+]:
     Root.RESOURCE_TYPES[resource.TYPE] = resource
