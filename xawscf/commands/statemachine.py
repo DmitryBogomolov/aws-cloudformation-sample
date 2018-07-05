@@ -2,10 +2,12 @@
 Starts (and cancels) state machine.
 '''
 
+from logging import getLogger
 import time
 import json
 from ..utils.client import get_client
-from ..utils.logger import log, logError
+
+logger = getLogger(__name__)
 
 def get_arn(sts, name):
     return 'arn:aws:states:{}:{}:stateMachine:{}'.format(
@@ -23,7 +25,7 @@ def wait(stepfunctions, execution_arn):
 def run(pattern, name, input=None, cancel=False):
     statemachine = pattern.get_statemachine(name)
     if not statemachine:
-        log('State machine *{}* is unknown.', name)
+        logger.info('State machine *{}* is unknown.'.format(name))
         return 1
 
     stepfunctions = get_client(pattern, 'stepfunctions')
@@ -35,7 +37,7 @@ def run(pattern, name, input=None, cancel=False):
         for obj in response['executions']:
             stepfunctions.stop_execution(executionArn=obj['executionArn'],
                 error='ManuallyStopped', cause='Stopped from script')
-        log('canceled')
+        logger.info('canceled')
     else:
         kwargs = { 'stateMachineArn': get_arn(get_client(pattern, 'sts'), statemachine.full_name) }
         if input:
@@ -43,7 +45,7 @@ def run(pattern, name, input=None, cancel=False):
         response = stepfunctions.start_execution(**kwargs)
         response = wait(stepfunctions, response['executionArn'])
         if response['status'] != 'SUCCEEDED':
-            log(response['status'])
+            logger.info(response['status'])
             return 1
         output = json.loads(response['output'])
-        log(json.dumps(output, indent=2))
+        logger.info(json.dumps(output, indent=2))

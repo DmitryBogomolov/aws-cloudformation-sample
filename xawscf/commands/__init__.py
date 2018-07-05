@@ -1,8 +1,8 @@
+from logging import getLogger
 import sys
 from os import listdir, path
 import importlib
 import inspect
-from ..utils.logger import log, logError
 from ..pattern.pattern import get_pattern
 
 class Parameter(object):
@@ -17,6 +17,8 @@ class Command(object):
         self.description = description
         self.parameters = parameters
 
+
+logger = getLogger(__name__)
 
 def is_run(arg):
     return arg == 'run'
@@ -40,11 +42,11 @@ def make_command(name, func):
     name = func.__module__.split('.')[-1]
 
     def execute(**kwargs):
-        log('* {} *'.format(name))
+        logger.info('* {} *'.format(name))
         try:
             pattern = get_pattern(kwargs.get('pattern'))
         except FileNotFoundError as err:
-            logError('File *{}* does not exist.'.format(err.filename))
+            logger.error('File *{}* does not exist.'.format(err.filename))
             return 1
         kwargs = kwargs.copy()
         kwargs['pattern'] = pattern

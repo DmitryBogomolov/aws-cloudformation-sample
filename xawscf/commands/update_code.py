@@ -2,19 +2,21 @@
 Updates lambda sources.
 '''
 
+from logging import getLogger
 from ..utils import helper
 from ..utils.client import get_client
-from ..utils.logger import log, logError
 from ..utils.parallel import run_parallel
 from ..utils.cloudformation import get_sources_bucket
+
+logger = getLogger(__name__)
 
 def update_source(lambda_client, function, bucket):
     try:
         lambda_client.update_function_code(FunctionName=function.full_name,
             S3Bucket=bucket, S3Key=helper.get_archive_name(function.get('code_uri')))
-        log(' - {}', function.name)
+        logger.info(' - {}'.format(function.name))
     except Exception as err:
-        logError(err)
+        logger.exception(err)
 
 def run(pattern, names=None):
     bucket = get_sources_bucket(get_client(pattern, 'cloudformation'), pattern.get('project'))

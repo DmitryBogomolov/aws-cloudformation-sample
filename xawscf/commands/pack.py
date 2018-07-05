@@ -2,12 +2,14 @@
 Packs lambda sources into zip archives.
 '''
 
+from logging import getLogger
 from os import listdir, path
 import zipfile
 import shutil
 from ..utils import helper
-from ..utils.logger import log
 from ..utils.parallel import run_parallel
+
+logger = getLogger(__name__)
 
 def pack_directory(zf, real_dir, zip_dir):
     for item in listdir(real_dir):
@@ -34,7 +36,7 @@ def build_archive(code_uri):
             else:
                 kind = 'dir to zip'
                 pack_directory(zf, code_uri, '')
-    log(' - {} -> {} ({})', code_uri, archive_name, kind)
+    logger.info(' - {} -> {} ({})'.format(code_uri, archive_name, kind))
 
 def build_packages(pattern, names):
     get_task = lambda code_uri: (build_archive, [code_uri])

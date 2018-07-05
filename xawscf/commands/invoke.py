@@ -2,15 +2,17 @@
 Invokes lambda function.
 '''
 
+from logging import getLogger
 import json
 from ..utils.client import get_client
-from ..utils.logger import log, logError
+
+logger = getLogger(__name__)
 
 def run(pattern, name, payload=None):
     lambda_client = get_client(pattern, 'lambda')
     function = pattern.get_function(name)
     if not function:
-        log('Function *{}* is unknown.', name)
+        logger.info('Function *{}* is unknown.'.format(name))
         return 1
     kwargs = { 'FunctionName': function.full_name }
     if payload:
@@ -18,19 +20,19 @@ def run(pattern, name, payload=None):
     try:
         response = lambda_client.invoke(**kwargs)
     except lambda_client.exceptions.ResourceNotFoundException:
-        log('Function *{}* is not found.', function.full_name)
+        logger.info('Function *{}* is not found.'.format(function.full_name))
         return 1
-    except Exception as e:
-        logError(e)
+    except Exception as err:
+        logger.exception(err)
         return 1
     payload = json.loads(response['Payload'].read().decode('utf-8'))
     if response.get('FunctionError'):
         error_type = payload.get('errorType')
-        log((error_type + ': ' if error_type else '') + payload.get('errorMessage'))
+        logger.info((error_type + ': ' if error_type else '') + payload.get('errorMessage'))
         stack_trace = payload.get('stackTrace')
         if stack_trace:
             for file_name, line, func, code in stack_trace:
-                log('  {}, {}, in {}', file_name, line, func)
-                log('    {}', code)
+                logger.info('  {}, {}, in {}'.format(file_name, line, func))
+                logger.info('    {}'.format(code))
         return 1
-    log(json.dumps(payload, indent=2))
+    logger.info(json.dumps(payload, indent=2))

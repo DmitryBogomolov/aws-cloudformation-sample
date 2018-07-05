@@ -3,7 +3,13 @@ Executes different commands.
 '''
 
 import argparse
+import logging
 from .commands import commands
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+logger.addHandler(handler)
 
 def setup_subparsers(subparsers):
     for command in commands:

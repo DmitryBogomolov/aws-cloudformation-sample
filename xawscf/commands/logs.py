@@ -2,12 +2,14 @@
 Gets cloudwatch logs for lambda function.
 '''
 
+from logging import getLogger
 import re
 from datetime import datetime
 from collections import namedtuple
 from ..utils.client import get_client
-from ..utils.logger import log, logError
 from ..utils.parallel import run_parallel
+
+logger = getLogger(__name__)
 
 re_stream_name = re.compile(r'^.*\[(.*)\](.*)$')
 re_invocation_start = re.compile(r'^START RequestId: (.*)Version: (.*)$')
@@ -79,9 +81,9 @@ def get_stream_events(logs, function_name, group_name, stream_name):
     while True:
         response = logs.filter_log_events(**kwargs)
         events.extend(response['events'])
-        nextToken = response.get('nextToken')
-        if nextToken:
-            kwargs['nextToken'] = nextToken
+        next_token = response.get('nextToken')
+        if next_token:
+            kwargs['nextToken'] = next_token
         else:
             break
     entries = []
@@ -95,8 +97,8 @@ def get_stream_events(logs, function_name, group_name, stream_name):
         try:
             entry, current_events = extract_entry(current_events, basis)
             entries.append(entry)
-        except Exception as e:
-            logError(e)
+        except Exception as err:
+            logger.exception(err)
     return stream_name, entries
 
 def load_all_events(logs, function_name, group_name, stream_names):
@@ -112,23 +114,24 @@ def load_all_events(logs, function_name, group_name, stream_names):
 
 def print_event(event):
     timestamp = datetime.fromtimestamp(event.start / 1E3).replace(microsecond=0).isoformat()
-    log(HEADER_TEMPLATE.format(e=event, t=timestamp))
+    logger.info(HEADER_TEMPLATE.format(e=event, t=timestamp))
     for item in event.items:
-        log(ITEM_TEMPLATE.format(offset=item.timestamp - event.start, message=item.message.strip()))
-    log(FOOTER_TEMPLATE.format(e=event))
-    log('')
+        logger.info(ITEM_TEMPLATE.format(
+            offset=item.timestamp - event.start, message=item.message.strip()))
+    logger.info(FOOTER_TEMPLATE.format(e=event))
+    logger.info('')
 
 def run(pattern, name):
     logs = get_client(pattern, 'logs')
     function = pattern.get_function(name)
     if not function:
-        log('Function *{}* is unknown.', name)
+        logger.info('Function *{}* is unknown.'.format(name))
         return 1
     group_name = function.log_group_name
     try:
         streams = logs.describe_log_streams(logGroupName=group_name)['logStreams']
     except logs.exceptions.ResourceNotFoundException:
-        log('Log group *{}* is not found.', group_name)
+        logger.info('Log group *{}* is not found.'.format(group_name))
         return 1
     stream_names = list(map(lambda obj: obj['logStreamName'], streams))
     events = load_all_events(logs, name, group_name, stream_names)
