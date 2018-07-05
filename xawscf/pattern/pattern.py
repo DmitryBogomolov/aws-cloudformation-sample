@@ -1,5 +1,5 @@
 from ..utils.helper import PATTERN_NAME
-from ..utils.yaml import load
+from ..utils.loader import load
 from .root import Root
 
 def get_pattern(pattern_path):

@@ -2,7 +2,7 @@ import unittest
 import json
 from datetime import date
 from .. import statemachine
-from ...utils.yaml import Custom
+from ...utils.loader import Custom
 
 class TestStateMachine(unittest.TestCase):
     def test_dump_StateMachineRole(self):

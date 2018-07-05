@@ -1,7 +1,7 @@
 import unittest
 from datetime import date
 from .. import function
-from ...utils.yaml import Custom
+from ...utils.loader import Custom
 
 class TestFunction(unittest.TestCase):
     def test_dump_LogGroup(self):

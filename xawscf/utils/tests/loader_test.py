@@ -1,6 +1,6 @@
 import unittest
 import os
-from .. import yaml
+from .. import loader
 
 FILE_NAME = 'test.yaml'
 
@@ -14,11 +14,11 @@ class TestYaml(unittest.TestCase):
 
     def check_load(self, content, expected):
         create_file(content)
-        obj = yaml.load(FILE_NAME)
+        obj = loader.load(FILE_NAME)
         self.assertEqual(obj, expected)
 
     def check_save(self, obj, expected):
-        yaml.save(FILE_NAME, obj)
+        loader.save(FILE_NAME, obj)
         with open(FILE_NAME, 'r') as f:
             content = f.read()
         self.assertEqual(content, expected)
@@ -27,20 +27,20 @@ class TestYaml(unittest.TestCase):
         self.check_load('a: test', { 'a': 'test' })
 
     def test_load_intrinsic_scalar(self):
-        self.check_load('a: !Ref b', { 'a': yaml.Custom('!Ref', 'b') })
+        self.check_load('a: !Ref b', { 'a': loader.Custom('!Ref', 'b') })
 
     def test_load_intrinsic_list(self):
-        self.check_load('a: !Sub [1, 2]', { 'a': yaml.Custom('!Sub', [1, 2]) })
+        self.check_load('a: !Sub [1, 2]', { 'a': loader.Custom('!Sub', [1, 2]) })
 
     def test_load_intrinsic_dict(self):
         self.check_load('a: { b: !GetAtt c.d, c: 1 }',
-            { 'a': { 'b': yaml.Custom('!GetAtt', 'c.d'), 'c': 1 } })
+            { 'a': { 'b': loader.Custom('!GetAtt', 'c.d'), 'c': 1 } })
 
     def test_load_intrinsic_complex(self):
         self.check_load('a: !Sub [test, { b: !Ref c, d: !GetAtt e }]', {
-            'a': yaml.Custom('!Sub', ['test', {
-                'b': yaml.Custom('!Ref', 'c'),
-                'd': yaml.Custom('!GetAtt', 'e')
+            'a': loader.Custom('!Sub', ['test', {
+                'b': loader.Custom('!Ref', 'c'),
+                'd': loader.Custom('!GetAtt', 'e')
             }])
         })
 
@@ -48,20 +48,20 @@ class TestYaml(unittest.TestCase):
         self.check_save({ 'a': 'test' }, 'a: test\n')
 
     def test_save_intrinsic_scalar(self):
-        self.check_save({ 'a': yaml.Custom('!Ref', 'b') }, "a: !Ref 'b'\n")
+        self.check_save({ 'a': loader.Custom('!Ref', 'b') }, "a: !Ref 'b'\n")
 
     def test_save_intrinsic_list(self):
-        self.check_save({ 'a': yaml.Custom('!Sub', [1, 2]) }, "a: !Sub\n- 1\n- 2\n")
+        self.check_save({ 'a': loader.Custom('!Sub', [1, 2]) }, "a: !Sub\n- 1\n- 2\n")
 
     def test_save_intrinsic_dict(self):
-        self.check_save({ 'a': { 'b': yaml.Custom('!GetAtt', 'c.d'), 'c': 1 } },
+        self.check_save({ 'a': { 'b': loader.Custom('!GetAtt', 'c.d'), 'c': 1 } },
             "a:\n  b: !GetAtt 'c.d'\n  c: 1\n")
 
     def test_save_intrinsic_complex(self):
         self.check_save({
-            'a': yaml.Custom('!Sub', ['test', {
-                'b': yaml.Custom('!Ref', 'c'),
-                'd': yaml.Custom('!GetAtt', 'e')
+            'a': loader.Custom('!Sub', ['test', {
+                'b': loader.Custom('!Ref', 'c'),
+                'd': loader.Custom('!GetAtt', 'e')
             }])
         }, "a: !Sub\n- test\n- b: !Ref 'c'\n  d: !GetAtt 'e'\n")
 

@@ -1,7 +1,7 @@
 import unittest
 from datetime import date
 from .. import role
-from ...utils.yaml import Custom
+from ...utils.loader import Custom
 
 class TestRole(unittest.TestCase):
     def test_dump_Role(self):

@@ -1,6 +1,6 @@
 import unittest
 from .. import bucket
-from ...utils.yaml import Custom
+from ...utils.loader import Custom
 
 class TestBucket(unittest.TestCase):
     def test_dump_Bucket(self):

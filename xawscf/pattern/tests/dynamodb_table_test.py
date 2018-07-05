@@ -1,6 +1,6 @@
 import unittest
 from .. import dynamodb_table
-from ...utils.yaml import Custom
+from ...utils.loader import Custom
 
 class StubSource(object):
     def __init__(self, data):

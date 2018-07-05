@@ -4,7 +4,7 @@ Translates pattern file into cloudformation template file.
 
 from logging import getLogger
 from ..utils import helper
-from ..utils.yaml import save
+from ..utils.loader import save
 
 logger = getLogger(__name__)
 

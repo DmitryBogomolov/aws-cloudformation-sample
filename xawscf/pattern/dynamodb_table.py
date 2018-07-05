@@ -1,4 +1,4 @@
-from ..utils.yaml import Custom
+from ..utils.loader import Custom
 from ..utils.helper import try_set_field, make_output, set_tags_list
 from .base import Base
 from .base_resource import BaseResource

@@ -1,6 +1,6 @@
 import unittest
 from .. import apigateway
-from ...utils.yaml import Custom
+from ...utils.loader import Custom
 
 class TestApiGateway(unittest.TestCase):
     def test_get_resource(self):

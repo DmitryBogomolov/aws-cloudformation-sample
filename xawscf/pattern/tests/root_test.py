@@ -1,7 +1,7 @@
 import unittest
 from datetime import date
 from .. import root
-from ...utils.yaml import Custom
+from ...utils.loader import Custom
 
 class TestRoot(unittest.TestCase):
     Stub = type('Stub', (), {})
