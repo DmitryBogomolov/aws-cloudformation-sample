@@ -18,4 +18,4 @@ def run(pattern):
     if not is_stack_in_progress(stack):
         logger.info('stack is not in progress')
         return 1
-    watch_stack_status(cf, stack_name)
+    watch_stack_status(cf, logger, stack_name)

@@ -37,7 +37,7 @@ def create_change_set(cf, stack_name, change_set_name, template_body):
 
 def update_stack(cf, stack_name, change_set_name):
     cf.execute_change_set(StackName=stack_name, ChangeSetName=change_set_name)
-    ret = watch_stack_status(cf, stack_name)
+    ret = watch_stack_status(cf, logger, stack_name)
     if ret:
         logger.info('stack is not updated')
         raise Exception(ret)

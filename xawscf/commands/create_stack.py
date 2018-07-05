@@ -16,5 +16,5 @@ def run(pattern):
         logger.info('stack already exists')
         return 1
     cf.create_stack(StackName=stack_name, TemplateBody=Root.TEMPLATE)
-    watch_stack_status(cf, stack_name)
+    watch_stack_status(cf, logger, stack_name)
     logger.info('stack is created')

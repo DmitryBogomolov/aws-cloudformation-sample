@@ -20,5 +20,5 @@ def run(pattern):
         logger.info('stack is in progress')
         return 1
     cf.delete_stack(StackName=stack_name)
-    watch_stack_status(cf, stack_name)
+    watch_stack_status(cf, logger, stack_name)
     logger.info('stack is deleted')

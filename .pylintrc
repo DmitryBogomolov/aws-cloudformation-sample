@@ -1,6 +1,7 @@
 [BASIC]
 
 include-naming-hint=yes
+good-names=cf
 
 [MESSAGES CONTROL]
 
