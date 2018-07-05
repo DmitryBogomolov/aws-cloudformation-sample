@@ -1,5 +1,5 @@
-
-class colors:
+# pylint: disable=invalid-name,too-few-public-methods
+class colors(object):
     RESET = '\033[0m'
     GREEN = '\033[32m'
     YELLOW = '\033[93m'

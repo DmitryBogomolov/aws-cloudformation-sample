@@ -5,7 +5,7 @@ PATTERN_NAME = 'pattern.yaml'
 TEMPLATE_NAME = 'template.yaml'
 
 def ensure_folder():
-    makedirs(PACKAGE_PATH, exist_ok=True)
+    makedirs(PACKAGE_PATH, exist_ok=True)   # pylint: disable=unexpected-keyword-arg
 
 def get_archive_name(code_uri):
     norm = path.relpath(path.normcase(path.normpath(code_uri)))
@@ -41,9 +41,9 @@ def try_set_field(target, name, value):
         target[name] = value
 
 def make_output(value):
-    return { 'Value': value }
+    return {'Value': value}
 
 def set_tags_list(template, resource):
     items = sorted(resource.get('tags', {}).items(), key=lambda x: x[0])
-    tags = ({ 'Key': key, 'Value': value } for key, value in items)
+    tags = ({'Key': key, 'Value': value} for key, value in items)
     template['Tags'].extend(tags)
