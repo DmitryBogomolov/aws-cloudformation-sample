@@ -1,6 +1,7 @@
 from os import getcwd, path
 import yaml
 
+# pylint: disable=too-few-public-methods
 class Custom(object):
     def __init__(self, tag, value):
         self.tag = tag
@@ -13,14 +14,14 @@ def custom_constructor(loader, node):
     construct = getattr(loader, 'construct_' + node.id)
     return Custom(node.tag, construct(node))
 
-type_to_representer = {
+TYPE_TO_REPRESENTER = {
     'list': 'sequence',
     'dict': 'mapping'
 }
 
 def custom_representer(dumper, data):
     represent = getattr(dumper,
-        'represent_' + type_to_representer.get(type(data.value).__name__, 'scalar'))
+        'represent_' + TYPE_TO_REPRESENTER.get(type(data.value).__name__, 'scalar'))
     return represent(data.tag, data.value)
 
 INTRINSIC_FUNCTIONS = (
@@ -37,8 +38,8 @@ INTRINSIC_FUNCTIONS = (
     '!Ref'
 )
 
-for tag in INTRINSIC_FUNCTIONS:
-    yaml.add_constructor(tag, custom_constructor)
+for intrinsic in INTRINSIC_FUNCTIONS:
+    yaml.add_constructor(intrinsic, custom_constructor)
 yaml.add_representer(Custom, custom_representer)
 
 CWD = path.join(getcwd(), '')
@@ -53,9 +54,9 @@ def include_file_constructor(loader, node):
 yaml.add_constructor('!include', include_file_constructor)
 
 def load(file_path):
-    with open(file_path, 'r') as f:
-        return yaml.load(f)
+    with open(file_path, 'r') as file_object:
+        return yaml.load(file_object)
 
 def save(file_path, data):
-    with open(file_path, 'w') as f:
-        yaml.dump(data, f, default_flow_style=False)
+    with open(file_path, 'w') as file_object:
+        yaml.dump(data, file_object, default_flow_style=False)
