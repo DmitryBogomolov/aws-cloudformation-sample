@@ -29,7 +29,7 @@ Properties:
         template['DependsOn'].append(self.get('function'))
 
     def _dump_properties(self, properties):
-       properties['FunctionName'].value = self.get('function')
+        properties['FunctionName'].value = self.get('function')
 
 
 class FunctionRole(Role):
@@ -62,8 +62,8 @@ Properties:
         name = self.name
         log_name = name + 'LogGroup'
         version_name = name + 'Version'
-        LogGroup(log_name, { 'group_name': self.log_group_name }, self.root).dump(parent_template)
-        LambdaVersion(version_name, { 'function': name }, self.root).dump(parent_template)
+        LogGroup(log_name, {'group_name': self.log_group_name}, self.root).dump(parent_template)
+        LambdaVersion(version_name, {'function': name}, self.root).dump(parent_template)
 
         role_statement = self.get('role_statement', None)
         if role_statement:
@@ -94,5 +94,5 @@ Properties:
             self.get('role', None) if not self.get('role_statement', None) else None)
         properties['Tags'].update(self.get('tags', {}))
         properties['Environment']['Variables'].update(self.get('environment', {}))
-        if len(properties['Environment']['Variables']) == 0:
+        if not properties['Environment']['Variables']:
             properties.pop('Environment')

@@ -5,11 +5,12 @@ from .. import statemachine
 from ...utils.loader import Custom
 
 class TestStateMachine(unittest.TestCase):
+    # pylint: disable=invalid-name
     def test_dump_StateMachineRole(self):
         self.maxDiff = None
         resources = {}
-        obj = statemachine.StateMachineRole('Role1', {}, { 'project': 'project1' })
-        obj.dump({ 'Resources': resources })
+        obj = statemachine.StateMachineRole('Role1', {}, {'project': 'project1'})
+        obj.dump({'Resources': resources})
 
         self.assertEqual(resources, {
             'Role1': {
@@ -20,7 +21,9 @@ class TestStateMachine(unittest.TestCase):
                         'Statement': [{
                             'Effect': 'Allow',
                             'Action': 'sts:AssumeRole',
-                            'Principal': { 'Service': Custom('!Sub', 'states.${AWS::Region}.amazonaws.com') }
+                            'Principal': {
+                                'Service': Custom('!Sub', 'states.${AWS::Region}.amazonaws.com')
+                            }
                         }]
                     },
                     'Path': '/',
@@ -37,6 +40,7 @@ class TestStateMachine(unittest.TestCase):
             }
         })
 
+    # pylint: disable=invalid-name
     def test_dump_StateMachine(self):
         self.maxDiff = None
         resources = {}
@@ -46,10 +50,10 @@ class TestStateMachine(unittest.TestCase):
                 'state-1': 1,
                 'state-2': 2
             },
-            'definition_args': { 'a': 1, 'b': 2 },
+            'definition_args': {'a': 1, 'b': 2},
             'role_statement': ['role-statement-1']
-        }, { 'project': 'project1' })
-        obj.dump({ 'Resources': resources, 'Outputs': outputs })
+        }, {'project': 'project1'})
+        obj.dump({'Resources': resources, 'Outputs': outputs})
 
         self.assertEqual(obj.name, 'StateMachine1')
         self.assertEqual(obj.full_name, 'project1-StateMachine1')
@@ -60,8 +64,8 @@ class TestStateMachine(unittest.TestCase):
                 'StateMachineName': 'project1-StateMachine1',
                 'RoleArn': Custom('!GetAtt', 'StateMachine1Role.Arn'),
                 'DefinitionString': Custom('!Sub', [
-                    json.dumps({ 'state-1': 1, 'state-2': 2 }, indent=2),
-                    { 'a': 1, 'b': 2 }
+                    json.dumps({'state-1': 1, 'state-2': 2}, indent=2),
+                    {'a': 1, 'b': 2}
                 ])
             },
             'DependsOn': ['StateMachine1Role']

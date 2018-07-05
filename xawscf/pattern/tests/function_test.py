@@ -4,12 +4,13 @@ from .. import function
 from ...utils.loader import Custom
 
 class TestFunction(unittest.TestCase):
+    # pylint: disable=invalid-name
     def test_dump_LogGroup(self):
         resources = {}
         obj = function.LogGroup('Group1', {
             'group_name': 'group-1'
         }, None)
-        obj.dump({ 'Resources': resources })
+        obj.dump({'Resources': resources})
 
         self.assertEqual(resources, {
             'Group1': {
@@ -21,12 +22,13 @@ class TestFunction(unittest.TestCase):
             }
         })
 
+    # pylint: disable=invalid-name
     def test_dump_LambdaVersion(self):
         resources = {}
         obj = function.LambdaVersion('Version1', {
             'function': 'Function1'
         }, None)
-        obj.dump({ 'Resources': resources })
+        obj.dump({'Resources': resources})
 
         self.assertEqual(resources, {
             'Version1': {
@@ -38,13 +40,14 @@ class TestFunction(unittest.TestCase):
             }
         })
 
+    # pylint: disable=invalid-name
     def test_dump_FunctionRole(self):
         resources = {}
         obj = function.FunctionRole('Role1', {
             'statement': ['s-1', 's-2'],
             'depends_on': ['target-1']
-        }, { 'project': 'project1' })
-        obj.dump({ 'Resources': resources })
+        }, {'project': 'project1'})
+        obj.dump({'Resources': resources})
 
         self.assertEqual(resources, {
             'Role1': {
@@ -55,11 +58,12 @@ class TestFunction(unittest.TestCase):
                         'Statement': [{
                             'Effect': 'Allow',
                             'Action': 'sts:AssumeRole',
-                            'Principal': { 'Service': 'lambda.amazonaws.com' }
+                            'Principal': {'Service': 'lambda.amazonaws.com'}
                         }]
                     },
                     'Path': '/',
-                    'ManagedPolicyArns': ['arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
+                    'ManagedPolicyArns':
+                        ['arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
                     'RoleName': Custom('!Sub', 'project1-${AWS::Region}-Role1'),
                     'Policies': [{
                         'PolicyName': 'Role1Policy',
@@ -73,6 +77,7 @@ class TestFunction(unittest.TestCase):
             }
         })
 
+    # pylint: disable=invalid-name
     def test_dump_Function(self):
         self.maxDiff = None
         resources = {}
@@ -91,8 +96,8 @@ class TestFunction(unittest.TestCase):
                 'a': 1,
                 'b': 2
             }
-        }, { 'project': 'project1' })
-        obj.dump({ 'Resources': resources, 'Outputs': outputs })
+        }, {'project': 'project1'})
+        obj.dump({'Resources': resources, 'Outputs': outputs})
 
         self.assertEqual(obj.name, 'Function1')
         self.assertEqual(obj.full_name, 'project1-Function1')
@@ -109,9 +114,9 @@ class TestFunction(unittest.TestCase):
                 },
                 'Runtime': 'python3',
                 'Timeout': 2,
-                'Tags': { 'tag-1': 10, 'tag-2': 20 },
+                'Tags': {'tag-1': 10, 'tag-2': 20},
                 'Environment': {
-                    'Variables': { 'a': 1, 'b': 2 }
+                    'Variables': {'a': 1, 'b': 2}
                 }
             },
             'DependsOn': ['Function1LogGroup']
@@ -119,10 +124,11 @@ class TestFunction(unittest.TestCase):
         self.assertIsNotNone(resources['Function1LogGroup'])
         self.assertIsNotNone(resources['Function1Version'])
         self.assertEqual(outputs, {
-            'Function1': { 'Value': Custom('!Ref', 'Function1') },
-            'Function1Version': { 'Value': Custom('!Ref', 'Function1Version') }
+            'Function1': {'Value': Custom('!Ref', 'Function1')},
+            'Function1Version': {'Value': Custom('!Ref', 'Function1Version')}
         })
 
+    # pylint: disable=invalid-name
     def test_dump_Function_role_statement(self):
         self.maxDiff = None
         resources = {}
@@ -133,8 +139,8 @@ class TestFunction(unittest.TestCase):
             'runtime': 'python3',
             'timeout': 2,
             'role_statement': ['s-1', 's-2']
-        }, { 'project': 'project1' })
-        obj.dump({ 'Resources': resources, 'Outputs': {} })
+        }, {'project': 'project1'})
+        obj.dump({'Resources': resources, 'Outputs': {}})
 
         self.assertEqual(len(resources), 4)
         self.assertEqual(resources['Function1']['Properties']['Role'],
@@ -144,6 +150,7 @@ class TestFunction(unittest.TestCase):
         self.assertEqual(resources['Function1Role']['Properties']['Policies'][0]
             ['PolicyDocument']['Statement'], ['s-1', 's-2'])
 
+    # pylint: disable=invalid-name
     def test_dump_Function_role(self):
         self.maxDiff = None
         resources = {}
@@ -154,8 +161,8 @@ class TestFunction(unittest.TestCase):
             'runtime': 'python3',
             'timeout': 2,
             'role': 'some-role'
-        }, { 'project': 'project1' })
-        obj.dump({ 'Resources': resources, 'Outputs': {} })
+        }, {'project': 'project1'})
+        obj.dump({'Resources': resources, 'Outputs': {}})
 
         self.assertEqual(len(resources), 3)
         self.assertEqual(resources['Function1']['Properties']['Role'], 'some-role')

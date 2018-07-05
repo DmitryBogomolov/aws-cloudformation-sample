@@ -2,6 +2,8 @@
 
 include-naming-hint=yes
 
+good-names=maxDiff
+
 # Naming hint for argument names
 argument-name-hint=(([a-z][a-z0-9_]{0,30})|(_[a-z0-9_]*))$
 
@@ -22,4 +24,12 @@ method-rgx=(([a-z][a-z0-9_]{2,40})|(_[a-z0-9_]*))$
 
 [MESSAGES CONTROL]
 
-disable=missing-docstring,logging-format-interpolation,bad-continuation,missing-super-argument
+disable=missing-docstring,
+        logging-format-interpolation,
+        bad-continuation,
+        missing-super-argument
+
+[MISCELLANEOUS]
+
+# List of note tags to take in consideration, separated by a comma.
+notes=

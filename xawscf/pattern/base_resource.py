@@ -7,11 +7,13 @@ class BaseResource(Base):
         self.name = name
         self.root = root
 
+    # pylint: disable=arguments-differ
     def dump(self, parent_template):
         template = yaml.load(self.TEMPLATE)
         self._dump(template, parent_template)
         parent_template['Resources'][self.name] = template
 
+    # pylint: disable=unused-argument
     def _dump(self, template, parent_template):
         properties = template['Properties']
         properties.update(self.get('Properties', {}))
@@ -27,4 +29,4 @@ class BaseResource(Base):
 
 
     def _dump_properties(self, properties):
-        raise Exception('Not implemented')
+        raise NotImplementedError('_dump_properties')

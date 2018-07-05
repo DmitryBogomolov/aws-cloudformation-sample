@@ -20,7 +20,7 @@ class TestRoot(unittest.TestCase):
         pattern = root.Root({
             'project': 'project-1',
             'resources': {
-                'f1': { 'type': 'function' }
+                'f1': {'type': 'function'}
             }
         })
 
@@ -31,7 +31,7 @@ class TestRoot(unittest.TestCase):
         pattern = root.Root({
             'project': 'project-1',
             'resources': {
-                's1': { 'type': 'statemachine' }
+                's1': {'type': 'statemachine'}
             }
         })
 
@@ -52,6 +52,6 @@ class TestRoot(unittest.TestCase):
                 }
             },
             'Outputs': {
-                'SourcesBucket': { 'Value': Custom('!Ref', 'SourcesBucket') }
+                'SourcesBucket': {'Value': Custom('!Ref', 'SourcesBucket')}
             }
         })

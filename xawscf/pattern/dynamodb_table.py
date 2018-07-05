@@ -138,8 +138,8 @@ class DynamoDBScalingRole(Role):
 def sanitize_resource_name(name):
     return name.title().replace('-', '').replace('_', '')
 
-def set_indexes(target, resource, field, SubResouce):
-    target.extend([SubResouce(obj).dump() for obj in resource.get(field, [])])
+def set_indexes(target, resource, field, sub_resouce_cls):
+    target.extend([sub_resouce_cls(obj).dump() for obj in resource.get(field, [])])
 
 
 class DynamoDBTable(BaseResource):
