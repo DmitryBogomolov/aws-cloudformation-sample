@@ -3,7 +3,7 @@ Uploads zip archives to s3 bucket.
 '''
 
 from logging import getLogger
-from boto3.exceptions import S3UploadFailedError
+from boto3.exceptions import S3UploadFailedError    # pylint: disable=import-error
 from ..utils import helper
 from ..utils.client import get_client
 from ..utils.parallel import run_parallel

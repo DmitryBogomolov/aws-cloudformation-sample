@@ -3,7 +3,6 @@ Deletes cloudformation stack.
 '''
 
 from logging import getLogger
-from ..utils import helper
 from ..utils.client import get_client
 from ..utils.cloudformation import get_stack_info, is_stack_in_progress, watch_stack_status
 

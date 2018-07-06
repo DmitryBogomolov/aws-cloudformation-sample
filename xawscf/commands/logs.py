@@ -12,10 +12,11 @@ from ..utils.text_painter import colors, paint
 
 logger = getLogger(__name__)
 
-re_stream_name = re.compile(r'^.*\[(.*)\](.*)$')
-re_invocation_start = re.compile(r'^START RequestId: (.*)Version: (.*)$')
-re_invocation_end = re.compile(r'^END RequestId: (.*)$')
-re_invocation_report = re.compile(
+RE_STREAM_NAME = re.compile(r'^.*\[(.*)\](.*)$')
+RE_INVOCATION_START = re.compile(r'^START RequestId: (.*)Version: (.*)$')
+RE_INVOCATION_END = re.compile(r'^END RequestId: (.*)$')
+RE_INVOCATION_REPORT = re.compile(
+    # pylint: disable=line-too-long
     r'^REPORT RequestId: (.*)Duration: (.*)Billed Duration: (.*)Memory Size: (.*)Max Memory Used: (.*)$')
 
 LogEntry = namedtuple('LogEntry', [
@@ -49,21 +50,21 @@ def find_index(start, end, regexp, events):
             return i, match
 
 def create_log_item(event):
-    kwargs = { 'timestamp': event['timestamp'], 'message': event['message'] }
+    kwargs = {'timestamp': event['timestamp'], 'message': event['message']}
     return LogItem(**kwargs)
 
 def extract_entry(events, basis):
     entry = basis.copy()
     count = len(events)
 
-    start_index, match = find_index(0, count, re_invocation_start, events)
+    start_index, match = find_index(0, count, RE_INVOCATION_START, events)
     entry['request_id'] = match.group(1).strip()
     assert match.group(2).strip() == basis['instance_version']
 
-    end_index, match = find_index(start_index + 1, count, re_invocation_end, events)
+    end_index, match = find_index(start_index + 1, count, RE_INVOCATION_END, events)
     assert match.group(1).strip() == entry['request_id']
 
-    report_index, match = find_index(end_index + 1, count, re_invocation_report, events)
+    report_index, match = find_index(end_index + 1, count, RE_INVOCATION_REPORT, events)
     assert match.group(1).strip() == entry['request_id']
     entry['duration'] = match.group(2).strip()
     entry['billed_duration'] = match.group(3).strip()
@@ -80,8 +81,8 @@ def extract_entry(events, basis):
 
 def get_stream_events(logs, function_name, group_name, stream_name):
     events = []
-    kwargs = { 'logGroupName': group_name, 'logStreamNames': [stream_name] }
-    instance_version, instance_id = re_stream_name.search(stream_name).groups()
+    kwargs = {'logGroupName': group_name, 'logStreamNames': [stream_name]}
+    instance_version, instance_id = RE_STREAM_NAME.search(stream_name).groups()
     while True:
         response = logs.filter_log_events(**kwargs)
         events.extend(response['events'])
@@ -97,11 +98,11 @@ def get_stream_events(logs, function_name, group_name, stream_name):
         'instance_version': instance_version,
         'instance_id': instance_id
     }
-    while len(current_events) > 0:
+    while current_events:
         try:
             entry, current_events = extract_entry(current_events, basis)
             entries.append(entry)
-        except Exception as err:
+        except Exception as err:    # pylint: disable=broad-except
             logger.exception(err)
     return stream_name, entries
 
@@ -137,7 +138,7 @@ def run(pattern, name):
     except logs.exceptions.ResourceNotFoundException:
         logger.info('Log group *{}* is not found.'.format(group_name))
         return 1
-    stream_names = list(map(lambda obj: obj['logStreamName'], streams))
+    stream_names = [obj['logStreamName'] for obj in streams]
     events = load_all_events(logs, name, group_name, stream_names)
     for event in events:
         print_event(event)

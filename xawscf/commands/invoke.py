@@ -14,7 +14,7 @@ def run(pattern, name, payload=None):
     if not function:
         logger.info('Function *{}* is unknown.'.format(name))
         return 1
-    kwargs = { 'FunctionName': function.full_name }
+    kwargs = {'FunctionName': function.full_name}
     if payload:
         kwargs['Payload'] = payload
     try:
@@ -22,7 +22,7 @@ def run(pattern, name, payload=None):
     except lambda_client.exceptions.ResourceNotFoundException:
         logger.info('Function *{}* is not found.'.format(function.full_name))
         return 1
-    except Exception as err:
+    except Exception as err:    # pylint: disable=broad-except
         logger.exception(err)
         return 1
     payload = json.loads(response['Payload'].read().decode('utf-8'))

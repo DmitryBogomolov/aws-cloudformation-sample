@@ -11,6 +11,7 @@ logger = getLogger(__name__)
 
 def get_arn(sts, name):
     return 'arn:aws:states:{}:{}:stateMachine:{}'.format(
+        # pylint: disable=protected-access
         sts._client_config.region_name, sts.get_caller_identity()['Account'], name)
 
 def wait(stepfunctions, execution_arn):
@@ -22,6 +23,7 @@ def wait(stepfunctions, execution_arn):
             time.sleep(1)
     return response
 
+# pylint: disable=redefined-builtin
 def run(pattern, name, input=None, cancel=False):
     statemachine = pattern.get_statemachine(name)
     if not statemachine:
@@ -39,7 +41,7 @@ def run(pattern, name, input=None, cancel=False):
                 error='ManuallyStopped', cause='Stopped from script')
         logger.info('canceled')
     else:
-        kwargs = { 'stateMachineArn': get_arn(get_client(pattern, 'sts'), statemachine.full_name) }
+        kwargs = {'stateMachineArn': get_arn(get_client(pattern, 'sts'), statemachine.full_name)}
         if input:
             kwargs['input'] = input
         response = stepfunctions.start_execution(**kwargs)

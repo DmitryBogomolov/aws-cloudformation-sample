@@ -5,11 +5,13 @@ import importlib
 import inspect
 from ..pattern.pattern import get_pattern
 
+# pylint: disable=too-few-public-methods
 class Parameter(object):
     def __init__(self, name):
         self.name = name
 
 
+# pylint: disable=too-few-public-methods
 class Command(object):
     def __init__(self, name, execute, description, parameters):
         self.name = name
@@ -27,16 +29,16 @@ def is_entry_function(obj):
     return inspect.isfunction(obj) and is_run(obj.__name__)
 
 def make_command(name, func):
-    signature = inspect.signature(func)
+    signature = inspect.signature(func) # pylint: disable=no-member
     pattern_parameter = Parameter('pattern')
-    pattern_parameter.default = None
+    setattr(pattern_parameter, 'default', None)
     parameters = [pattern_parameter]
     for parameter in signature.parameters.values():
         if parameter.name == 'pattern':
             continue
         param = Parameter(parameter.name)
         if not parameter.default is signature.empty:
-            param.default = parameter.default
+            setattr(param, 'default', parameter.default)
         parameters.append(param)
 
     name = func.__module__.split('.')[-1]
@@ -54,15 +56,18 @@ def make_command(name, func):
 
     return Command(name, execute, sys.modules[func.__module__].__doc__, parameters)
 
-commands = []
+def collect_commands():
+    items = []
+    for filename in sorted(listdir(path.dirname(__file__))):
+        command, ext = path.splitext(filename)
+        if ext != '.py' or command == '__init__':
+            continue
+        mod = importlib.import_module('.' + command, __name__)
+        members = inspect.getmembers(mod, is_entry_function)
+        if not members:
+            continue
+        func = next(member for name, member in members if is_run(name))
+        items.append(make_command(command, func))
+    return items
 
-for filename in sorted(listdir(path.dirname(__file__))):
-    command, ext = path.splitext(filename)
-    if ext != '.py' or command == '__init__':
-        continue
-    mod = importlib.import_module('.' + command, __name__)
-    members = inspect.getmembers(mod, is_entry_function)
-    if len(members) == 0:
-        continue
-    func = next(member for name, member in members if is_run(name))
-    commands.append(make_command(command, func))
+commands = collect_commands()   # pylint: disable=invalid-name

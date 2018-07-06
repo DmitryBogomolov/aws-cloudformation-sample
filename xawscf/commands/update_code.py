@@ -15,7 +15,7 @@ def update_source(lambda_client, function, bucket):
         lambda_client.update_function_code(FunctionName=function.full_name,
             S3Bucket=bucket, S3Key=helper.get_archive_name(function.get('code_uri')))
         logger.info(' - {}'.format(function.name))
-    except Exception as err:
+    except Exception as err:    # pylint: disable=broad-except
         logger.exception(err)
 
 def run(pattern, names=None):

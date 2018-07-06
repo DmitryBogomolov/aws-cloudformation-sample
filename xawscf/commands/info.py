@@ -28,13 +28,13 @@ def run(pattern):
         logger.info('{:20}{}'.format(name, stack.get(key)))
     logger.info('')
 
-    if len(pattern.functions) > 0:
+    if pattern.functions:
         logger.info('Functions')
         for obj in sorted(pattern.functions, key=lambda obj: obj.name):
             logger.info('  {}'.format(obj.name))
         logger.info('')
 
-    if len(pattern.statemachines) > 0:
+    if pattern.statemachines:
         logger.info('State machines')
         for obj in sorted(pattern.statemachines, key=lambda obj: obj.name):
             logger.info('  {}'.format(obj.name))
