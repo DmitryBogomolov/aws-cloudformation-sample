@@ -18,3 +18,4 @@ def run(pattern):
     cf.create_stack(StackName=stack_name, TemplateBody=Root.TEMPLATE)
     watch_stack_status(cf, logger, stack_name)
     logger.info('stack is created')
+    return 0

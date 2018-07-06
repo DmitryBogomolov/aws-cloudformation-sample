@@ -44,3 +44,5 @@ def run(pattern):
     for obj in sorted(stack['Outputs'], key=lambda obj: obj['OutputKey']):
         logger.info('  {:32}{}'.format(obj['OutputKey'], obj['OutputValue']))
     logger.info('')
+
+    return 0

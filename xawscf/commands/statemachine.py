@@ -51,3 +51,4 @@ def run(pattern, name, input=None, cancel=False):
             return 1
         output = json.loads(response['output'])
         logger.info(json.dumps(output, indent=2))
+    return 0

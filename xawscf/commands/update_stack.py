@@ -57,4 +57,5 @@ def run(pattern):
         return 1
     change_set_name = 'change-set-' + hashlib.sha256(template_body.encode()).hexdigest()[:8]
     if create_change_set(cf, stack_name, change_set_name, template_body):
-        return update_stack(cf, stack_name, change_set_name)
+        update_stack(cf, stack_name, change_set_name)
+    return 0

@@ -36,3 +36,4 @@ def run(pattern, name, payload=None):
                 logger.info('    {}'.format(code))
         return 1
     logger.info(json.dumps(payload, indent=2))
+    return 0

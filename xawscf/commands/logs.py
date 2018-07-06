@@ -48,6 +48,7 @@ def find_index(start, end, regexp, events):
         match = regexp.search(events[i]['message'].strip())
         if match:
             return i, match
+    return None
 
 def create_log_item(event):
     kwargs = {'timestamp': event['timestamp'], 'message': event['message']}
@@ -142,3 +143,4 @@ def run(pattern, name):
     events = load_all_events(logs, name, group_name, stream_names)
     for event in events:
         print_event(event)
+    return 0

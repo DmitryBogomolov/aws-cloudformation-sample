@@ -21,3 +21,4 @@ def run(pattern):
     cf.delete_stack(StackName=stack_name)
     watch_stack_status(cf, logger, stack_name)
     logger.info('stack is deleted')
+    return 0
