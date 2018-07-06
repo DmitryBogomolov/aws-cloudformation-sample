@@ -33,7 +33,8 @@ additional-builtins=FileNotFoundError
 disable=missing-docstring,
         logging-format-interpolation,
         bad-continuation,
-        missing-super-argument
+        missing-super-argument,
+        similarities
 
 [MISCELLANEOUS]
 

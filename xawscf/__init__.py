@@ -6,16 +6,17 @@ import argparse
 import logging
 from .commands import commands
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-handler = logging.StreamHandler()
-logger.addHandler(handler)
+def setup_logger():
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    handler = logging.StreamHandler()
+    logger.addHandler(handler)
 
 def setup_subparsers(subparsers):
     for command in commands:
         subparser = subparsers.add_parser(command.name, description=command.description)
         for parameter in command.parameters:
-            args = { 'required': True }
+            args = {'required': True}
             if hasattr(parameter, 'default'):
                 args['required'] = False
                 if isinstance(parameter.default, bool):
@@ -23,6 +24,8 @@ def setup_subparsers(subparsers):
             subparser.add_argument('--' + parameter.name, **args)
 
 def run():
+    setup_logger()
+
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest='command', description='Select subcommand')
     setup_subparsers(subparsers)
