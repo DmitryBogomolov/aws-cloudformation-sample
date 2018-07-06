@@ -14,4 +14,4 @@ install:
   - make install-requirements
 
 script:
-  - make test && ./check-examples.sh && ./travis-check-container.sh
+  - make test && make lint && ./check-examples.sh && ./travis-check-container.sh
