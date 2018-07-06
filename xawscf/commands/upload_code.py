@@ -2,21 +2,23 @@
 Uploads zip archives to s3 bucket.
 '''
 
-from boto3.exceptions import S3UploadFailedError
+from logging import getLogger
+from boto3.exceptions import S3UploadFailedError    # pylint: disable=import-error
 from ..utils import helper
 from ..utils.client import get_client
-from ..utils.logger import log, logError
 from ..utils.parallel import run_parallel
 from ..utils.cloudformation import get_sources_bucket
+
+logger = getLogger(__name__)
 
 def deploy_source(s3, code_uri, bucket):
     archive_name = helper.get_archive_name(code_uri)
     try:
         s3.upload_file(
             helper.get_archive_path(archive_name), bucket, archive_name)
-        log(' - {}', archive_name)
+        logger.info(' - {}'.format(archive_name))
     except S3UploadFailedError as err:
-        logError(err)
+        logger.exception(err)
 
 def run(pattern, names=None):
     s3 = get_client(pattern, 's3')

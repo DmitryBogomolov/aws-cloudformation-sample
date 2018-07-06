@@ -24,6 +24,9 @@ install:
 develop:
 	python3 setup.py develop
 
+lint:
+	pylint $(name)
+
 test:
 	python3 -m unittest discover -p "*_test.py" -v
 

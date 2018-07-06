@@ -2,9 +2,11 @@
 Gets cloudformation stack info.
 '''
 
+from logging import getLogger
 from ..utils.client import get_client
-from ..utils.logger import log
 from ..utils.cloudformation import get_stack_info
+
+logger = getLogger(__name__)
 
 FIELDS = (
     ('Name', 'StackName'),
@@ -20,25 +22,27 @@ def run(pattern):
     cf = get_client(pattern, 'cloudformation')
     stack = get_stack_info(cf, stack_name)
     if not stack:
-        log('stack does not exist')
+        logger.info('stack does not exist')
         return 1
     for name, key in FIELDS:
-        log('{:20}{}', name, stack.get(key))
-    log('')
+        logger.info('{:20}{}'.format(name, stack.get(key)))
+    logger.info('')
 
-    if len(pattern.functions) > 0:
-        log('Functions')
+    if pattern.functions:
+        logger.info('Functions')
         for obj in sorted(pattern.functions, key=lambda obj: obj.name):
-            log('  {}', obj.name)
-        log('')
+            logger.info('  {}'.format(obj.name))
+        logger.info('')
 
-    if len(pattern.statemachines) > 0:
-        log('State machines')
+    if pattern.statemachines:
+        logger.info('State machines')
         for obj in sorted(pattern.statemachines, key=lambda obj: obj.name):
-            log('  {}', obj.name)
-        log('')
+            logger.info('  {}'.format(obj.name))
+        logger.info('')
 
-    log('Outputs')
+    logger.info('Outputs')
     for obj in sorted(stack['Outputs'], key=lambda obj: obj['OutputKey']):
-        log('  {:32}{}', obj['OutputKey'], obj['OutputValue'])
-    log('')
+        logger.info('  {:32}{}'.format(obj['OutputKey'], obj['OutputValue']))
+    logger.info('')
+
+    return 0

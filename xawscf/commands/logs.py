@@ -2,17 +2,21 @@
 Gets cloudwatch logs for lambda function.
 '''
 
+from logging import getLogger
 import re
 from datetime import datetime
 from collections import namedtuple
 from ..utils.client import get_client
-from ..utils.logger import log, logError
 from ..utils.parallel import run_parallel
+from ..utils.text_painter import colors, paint
 
-re_stream_name = re.compile(r'^.*\[(.*)\](.*)$')
-re_invocation_start = re.compile(r'^START RequestId: (.*)Version: (.*)$')
-re_invocation_end = re.compile(r'^END RequestId: (.*)$')
-re_invocation_report = re.compile(
+logger = getLogger(__name__)
+
+RE_STREAM_NAME = re.compile(r'^.*\[(.*)\](.*)$')
+RE_INVOCATION_START = re.compile(r'^START RequestId: (.*)Version: (.*)$')
+RE_INVOCATION_END = re.compile(r'^END RequestId: (.*)$')
+RE_INVOCATION_REPORT = re.compile(
+    # pylint: disable=line-too-long
     r'^REPORT RequestId: (.*)Duration: (.*)Billed Duration: (.*)Memory Size: (.*)Max Memory Used: (.*)$')
 
 LogEntry = namedtuple('LogEntry', [
@@ -24,40 +28,44 @@ LogEntry = namedtuple('LogEntry', [
 
 LogItem = namedtuple('LogItem', ['timestamp', 'message'])
 
-colors = {
-    'RESET': '\033[0m',
-    'GREEN': '\033[32m',
-    'YELLOW': '\033[93m',
-    'ORANGE': '\033[33m',
-    'BLUE': '\033[34m'
-}
-
-HEADER_TEMPLATE = '{GREEN}{{e.instance_id}} {YELLOW}{{e.request_id}} {BLUE}{{t}} {{e.span}}{RESET}'.format(**colors)
-FOOTER_TEMPLATE = '{BLUE}{{e.duration}} {ORANGE}{{e.memory_size}}{RESET}'.format(**colors)
-ITEM_TEMPLATE = '{BLUE}+{{offset}}{RESET} {{message}}'.format(**colors)
+HEADER_TEMPLATE = '{instance_id} {request_id} {timestamp} {span}'.format(
+    instance_id=paint(colors.GREEN, '{e.instance_id}'),
+    request_id=paint(colors.YELLOW, '{e.request_id}'),
+    timestamp=paint(colors.BLUE, '{timestamp}'),
+    span=paint(colors.BLUE, '{e.span}')
+)
+FOOTER_TEMPLATE = '{duration} {memory_size}'.format(
+    duration=paint(colors.BLUE, '{e.duration}'),
+    memory_size=paint(colors.ORANGE, '{e.memory_size}')
+)
+ITEM_TEMPLATE = '{offset} {message}'.format(
+    offset=paint(colors.BLUE, '{offset:6}'),
+    message='{message}'
+)
 
 def find_index(start, end, regexp, events):
     for i in range(start, end):
         match = regexp.search(events[i]['message'].strip())
         if match:
             return i, match
+    return None
 
 def create_log_item(event):
-    kwargs = { 'timestamp': event['timestamp'], 'message': event['message'] }
+    kwargs = {'timestamp': event['timestamp'], 'message': event['message']}
     return LogItem(**kwargs)
 
 def extract_entry(events, basis):
     entry = basis.copy()
     count = len(events)
 
-    start_index, match = find_index(0, count, re_invocation_start, events)
+    start_index, match = find_index(0, count, RE_INVOCATION_START, events)
     entry['request_id'] = match.group(1).strip()
     assert match.group(2).strip() == basis['instance_version']
 
-    end_index, match = find_index(start_index + 1, count, re_invocation_end, events)
+    end_index, match = find_index(start_index + 1, count, RE_INVOCATION_END, events)
     assert match.group(1).strip() == entry['request_id']
 
-    report_index, match = find_index(end_index + 1, count, re_invocation_report, events)
+    report_index, match = find_index(end_index + 1, count, RE_INVOCATION_REPORT, events)
     assert match.group(1).strip() == entry['request_id']
     entry['duration'] = match.group(2).strip()
     entry['billed_duration'] = match.group(3).strip()
@@ -74,14 +82,14 @@ def extract_entry(events, basis):
 
 def get_stream_events(logs, function_name, group_name, stream_name):
     events = []
-    kwargs = { 'logGroupName': group_name, 'logStreamNames': [stream_name] }
-    instance_version, instance_id = re_stream_name.search(stream_name).groups()
+    kwargs = {'logGroupName': group_name, 'logStreamNames': [stream_name]}
+    instance_version, instance_id = RE_STREAM_NAME.search(stream_name).groups()
     while True:
         response = logs.filter_log_events(**kwargs)
         events.extend(response['events'])
-        nextToken = response.get('nextToken')
-        if nextToken:
-            kwargs['nextToken'] = nextToken
+        next_token = response.get('nextToken')
+        if next_token:
+            kwargs['nextToken'] = next_token
         else:
             break
     entries = []
@@ -91,12 +99,12 @@ def get_stream_events(logs, function_name, group_name, stream_name):
         'instance_version': instance_version,
         'instance_id': instance_id
     }
-    while len(current_events) > 0:
+    while current_events:
         try:
             entry, current_events = extract_entry(current_events, basis)
             entries.append(entry)
-        except Exception as e:
-            logError(e)
+        except Exception as err:    # pylint: disable=broad-except
+            logger.exception(err)
     return stream_name, entries
 
 def load_all_events(logs, function_name, group_name, stream_names):
@@ -112,25 +120,27 @@ def load_all_events(logs, function_name, group_name, stream_names):
 
 def print_event(event):
     timestamp = datetime.fromtimestamp(event.start / 1E3).replace(microsecond=0).isoformat()
-    log(HEADER_TEMPLATE.format(e=event, t=timestamp))
+    logger.info(HEADER_TEMPLATE.format(e=event, timestamp=timestamp))
     for item in event.items:
-        log(ITEM_TEMPLATE.format(offset=item.timestamp - event.start, message=item.message.strip()))
-    log(FOOTER_TEMPLATE.format(e=event))
-    log('')
+        logger.info(ITEM_TEMPLATE.format(
+            offset=item.timestamp - event.start, message=item.message.strip()))
+    logger.info(FOOTER_TEMPLATE.format(e=event))
+    logger.info('')
 
 def run(pattern, name):
     logs = get_client(pattern, 'logs')
     function = pattern.get_function(name)
     if not function:
-        log('Function *{}* is unknown.', name)
+        logger.info('Function *{}* is unknown.'.format(name))
         return 1
     group_name = function.log_group_name
     try:
         streams = logs.describe_log_streams(logGroupName=group_name)['logStreams']
     except logs.exceptions.ResourceNotFoundException:
-        log('Log group *{}* is not found.', group_name)
+        logger.info('Log group *{}* is not found.'.format(group_name))
         return 1
-    stream_names = list(map(lambda obj: obj['logStreamName'], streams))
+    stream_names = [obj['logStreamName'] for obj in streams]
     events = load_all_events(logs, name, group_name, stream_names)
     for event in events:
         print_event(event)
+    return 0

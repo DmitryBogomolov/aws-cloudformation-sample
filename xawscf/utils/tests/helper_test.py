@@ -2,6 +2,7 @@ import unittest
 from os import path
 from .. import helper
 
+# pylint: disable=too-few-public-methods
 class Tester(object):
     def __init__(self, **kwargs):
         self.data = kwargs
@@ -52,9 +53,9 @@ class TestHelper(unittest.TestCase):
         functions = []
         for name in ['f1', 'f2', 'f3', 'f4']:
             function = Tester()
-            function.name = name
+            setattr(function, 'name', name)
             functions.append(function)
-        pattern.functions = functions
+        setattr(pattern, 'functions', functions)
         cases = [
             (None, functions),
             ('f2,f3', [functions[1], functions[2]]),
@@ -73,19 +74,19 @@ class TestHelper(unittest.TestCase):
         target = {}
         helper.try_set_field(target, 'a', None)
         helper.try_set_field(target, 'b', 1)
-        self.assertDictEqual(target, { 'b': 1 })
+        self.assertDictEqual(target, {'b': 1})
 
     def test_make_output(self):
-        self.assertEqual(helper.make_output(2), { 'Value': 2 })
+        self.assertEqual(helper.make_output(2), {'Value': 2})
 
     def test_set_tags_list(self):
         pattern = Tester(tags={
             'a': 1,
             'b': 2
         })
-        template = { 'Tags': [] }
+        template = {'Tags': []}
         helper.set_tags_list(template, pattern)
         self.assertEqual(template['Tags'], [
-            { 'Key': 'a', 'Value': 1 },
-            { 'Key': 'b', 'Value': 2 }
+            {'Key': 'a', 'Value': 1},
+            {'Key': 'b', 'Value': 2}
         ])

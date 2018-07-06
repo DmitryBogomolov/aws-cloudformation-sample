@@ -1,4 +1,4 @@
-from ..utils.yaml import Custom
+from ..utils.loader import Custom
 from ..utils.helper import set_tags_list, make_output
 from .base_resource import BaseResource
 

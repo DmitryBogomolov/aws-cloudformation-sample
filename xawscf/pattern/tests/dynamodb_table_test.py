@@ -1,6 +1,6 @@
 import unittest
 from .. import dynamodb_table
-from ...utils.yaml import Custom
+from ...utils.loader import Custom
 
 class StubSource(object):
     def __init__(self, data):
@@ -16,33 +16,35 @@ class StubSource(object):
         return obj
 
 class TestDynamoDBTable(unittest.TestCase):
+    # pylint: disable=invalid-name
     def test_dump_LocalSecondaryIndex(self):
         obj = dynamodb_table.LocalSecondaryIndex(StubSource({
             'index_name': 'Index1',
             'key_schema': [
-                { 'a1': 't1' },
-                { 'a2': 't2' }
+                {'a1': 't1'},
+                {'a2': 't2'}
             ],
-            'projection': { 'projection_type': 'projection-type-1' }
+            'projection': {'projection_type': 'projection-type-1'}
         }))
 
         self.assertEqual(obj.dump(), {
             'IndexName': 'Index1',
             'KeySchema': [
-                { 'AttributeName': 'a1', 'KeyType': 't1' },
-                { 'AttributeName': 'a2', 'KeyType': 't2' }
+                {'AttributeName': 'a1', 'KeyType': 't1'},
+                {'AttributeName': 'a2', 'KeyType': 't2'}
             ],
-            'Projection': { 'ProjectionType': 'projection-type-1' }
+            'Projection': {'ProjectionType': 'projection-type-1'}
         })
 
+    # pylint: disable=invalid-name
     def test_dump_GlobalSecondaryIndex(self):
         obj = dynamodb_table.GlobalSecondaryIndex(StubSource({
             'index_name': 'Index1',
             'key_schema': [
-                { 'a1': 't1' },
-                { 'a2': 't2' }
+                {'a1': 't1'},
+                {'a2': 't2'}
             ],
-            'projection': { 'projection_type': 'projection-type-1' },
+            'projection': {'projection_type': 'projection-type-1'},
             'provisioned_throughput': {
                 'read_capacity_units': 2,
                 'write_capacity_units': 4
@@ -52,23 +54,24 @@ class TestDynamoDBTable(unittest.TestCase):
         self.assertEqual(obj.dump(), {
             'IndexName': 'Index1',
             'KeySchema': [
-                { 'AttributeName': 'a1', 'KeyType': 't1' },
-                { 'AttributeName': 'a2', 'KeyType': 't2' }
+                {'AttributeName': 'a1', 'KeyType': 't1'},
+                {'AttributeName': 'a2', 'KeyType': 't2'}
             ],
-            'Projection': { 'ProjectionType': 'projection-type-1' },
-            'ProvisionedThroughput': { 'ReadCapacityUnits': 2, 'WriteCapacityUnits': 4 }
+            'Projection': {'ProjectionType': 'projection-type-1'},
+            'ProvisionedThroughput': {'ReadCapacityUnits': 2, 'WriteCapacityUnits': 4}
         })
 
+    # pylint: disable=invalid-name
     def test_dump_DynamoDBScalableTarget(self):
         resources = {}
         obj = dynamodb_table.DynamoDBScalableTarget(
-            name='Target1', source={ 'min': 1, 'max': 2 }, root=None,
+            name='Target1', source={'min': 1, 'max': 2}, root=None,
             table='Table1',
             resource='resource-1',
             dimension='dimension-1',
             role='Role1'
         )
-        obj.dump({ 'Resources': resources })
+        obj.dump({'Resources': resources})
 
         self.assertEqual(resources, {
             'Target1': {
@@ -78,7 +81,7 @@ class TestDynamoDBTable(unittest.TestCase):
                     'ServiceNamespace': 'dynamodb',
                     'RoleARN': Custom('!GetAtt', 'Role1.Arn'),
                     'ResourceId': Custom('!Sub',
-                        ['resource-1', { 'table': Custom('!Ref', 'Table1') }]),
+                        ['resource-1', {'table': Custom('!Ref', 'Table1')}]),
                     'MinCapacity': 1,
                     'MaxCapacity': 2
                 },
@@ -86,6 +89,7 @@ class TestDynamoDBTable(unittest.TestCase):
             }
         })
 
+    # pylint: disable=invalid-name
     def test_dump_DynamoDBScalingPolicy(self):
         self.maxDiff = None
         resources = {}
@@ -96,7 +100,7 @@ class TestDynamoDBTable(unittest.TestCase):
             metric_type='metric-1',
             target='Target1'
         )
-        obj.dump({ 'Resources': resources })
+        obj.dump({'Resources': resources})
 
         self.assertEqual(resources, {
             'Policy1': {
@@ -106,7 +110,7 @@ class TestDynamoDBTable(unittest.TestCase):
                     'PolicyType': 'TargetTrackingScaling',
                     'ScalingTargetId': Custom('!Ref', 'Target1'),
                     'TargetTrackingScalingPolicyConfiguration': {
-                        'PredefinedMetricSpecification': { 'PredefinedMetricType': 'metric-1' },
+                        'PredefinedMetricSpecification': {'PredefinedMetricType': 'metric-1'},
                         'ScaleInCooldown': 60,
                         'ScaleOutCooldown': 60,
                         'TargetValue': 50.0
@@ -116,14 +120,15 @@ class TestDynamoDBTable(unittest.TestCase):
             }
         })
 
+    # pylint: disable=invalid-name
     def test_dump_DynamoDBScalingRole(self):
         self.maxDiff = None
         resources = {}
         obj = dynamodb_table.DynamoDBScalingRole(
-            name='Role1', source={}, root={ 'project': 'project1' },
+            name='Role1', source={}, root={'project': 'project1'},
             table='Table1'
         )
-        obj.dump({ 'Resources': resources })
+        obj.dump({'Resources': resources})
 
         self.assertEqual(resources['Role1']['Properties']['AssumeRolePolicyDocument']
             ['Statement'][0]['Principal']['Service'], 'application-autoscaling.amazonaws.com')
@@ -147,6 +152,7 @@ class TestDynamoDBTable(unittest.TestCase):
                 }
             ])
 
+    # pylint: disable=invalid-name
     def test_dump_DynamoDBTable(self):
         self.maxDiff = None
         resources = {}
@@ -154,21 +160,21 @@ class TestDynamoDBTable(unittest.TestCase):
         obj = dynamodb_table.DynamoDBTable('Table1', StubSource({
             'table_name': 'table-1',
             'attribute_definitions': [
-                { 'a1': 't1' },
-                { 'a2': 't2' }
+                {'a1': 't1'},
+                {'a2': 't2'}
             ],
             'key_schema': [
-                { 'a3': 't3' },
-                { 'a4': 't4' }
+                {'a3': 't3'},
+                {'a4': 't4'}
             ],
-            'provisioned_throughput': { 'read_capacity_units': 4, 'write_capacity_units': 4 },
-            'stream_specification': { 'stream_view_type': 'stream-view-type-1' },
+            'provisioned_throughput': {'read_capacity_units': 4, 'write_capacity_units': 4},
+            'stream_specification': {'stream_view_type': 'stream-view-type-1'},
             'autoscaling': {
-                'read_capacity': { 'min': 11, 'max': 21 },
-                'write_capacity': { 'min': 12, 'max': 22 }
+                'read_capacity': {'min': 11, 'max': 21},
+                'write_capacity': {'min': 12, 'max': 22}
             }
-        }), { 'project': 'project1' })
-        obj.dump({ 'Resources': resources, 'Outputs': outputs })
+        }), {'project': 'project1'})
+        obj.dump({'Resources': resources, 'Outputs': outputs})
 
         self.assertEqual(len(resources), 6)
 
@@ -187,23 +193,23 @@ class TestDynamoDBTable(unittest.TestCase):
             'Properties': {
                 'TableName': 'table-1',
                 'AttributeDefinitions': [
-                    { 'AttributeName': 'a1', 'AttributeType': 't1' },
-                    { 'AttributeName': 'a2', 'AttributeType': 't2' }
+                    {'AttributeName': 'a1', 'AttributeType': 't1'},
+                    {'AttributeName': 'a2', 'AttributeType': 't2'}
                 ],
                 'KeySchema': [
-                    { 'AttributeName': 'a3', 'KeyType': 't3' },
-                    { 'AttributeName': 'a4', 'KeyType': 't4' }
+                    {'AttributeName': 'a3', 'KeyType': 't3'},
+                    {'AttributeName': 'a4', 'KeyType': 't4'}
                 ],
                 'LocalSecondaryIndexes': [],
                 'GlobalSecondaryIndexes': [],
-                'ProvisionedThroughput': { 'ReadCapacityUnits': 4, 'WriteCapacityUnits': 4 },
-                'StreamSpecification': { 'StreamViewType': 'stream-view-type-1' },
+                'ProvisionedThroughput': {'ReadCapacityUnits': 4, 'WriteCapacityUnits': 4},
+                'StreamSpecification': {'StreamViewType': 'stream-view-type-1'},
                 'Tags': []
             },
             'DependsOn': []
         })
 
         self.assertEqual(outputs, {
-            'Table1': { 'Value': Custom('!Ref', 'Table1') },
-            'Table1Arn': { 'Value': Custom('!GetAtt', 'Table1.Arn') }
+            'Table1': {'Value': Custom('!Ref', 'Table1')},
+            'Table1Arn': {'Value': Custom('!GetAtt', 'Table1.Arn')}
         })

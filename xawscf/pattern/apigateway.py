@@ -1,10 +1,9 @@
-import yaml
-from ..utils.yaml import Custom
+from ..utils.loader import Custom
 from ..utils.helper import get_full_name, make_output
 from .base_resource import BaseResource
 from .role import Role
 
-class ApiGatewayResouce(BaseResource):
+class ApiGatewayResource(BaseResource):
     TEMPLATE = \
 '''
 Type: AWS::ApiGateway::Resource
@@ -79,6 +78,7 @@ class ApiGatewayS3ObjectRole(Role):
 
 
 class ApiGatewayBucketMethod(BaseResource):
+    # pylint: disable=anomalous-backslash-in-string
     TEMPLATE = \
 '''
 Type: AWS::ApiGateway::Method
@@ -168,7 +168,7 @@ def get_resource(url, resources):
         name = name.title() + 'Var'
     else:
         name = part.title()
-    resource = { 'name': parent['name'] + name, 'part': part, 'parent': parent_url }
+    resource = {'name': parent['name'] + name, 'part': part, 'parent': parent_url}
     resources[url] = resource
     return resource
 
@@ -193,10 +193,11 @@ Properties:
 
     TYPE = 'apigateway'
 
+    # pylint: disable=too-many-locals
     def _dump(self, template, parent_template):
         super()._dump(template, parent_template)
         endpoints = self.get('endpoints', [])
-        if len(endpoints) == 0:
+        if not endpoints:
             return
 
         name = self.name
@@ -204,7 +205,7 @@ Properties:
         methods = []
         functions = set()
         resources = {
-            '': { 'name': '' }
+            '': {'name': ''}
         }
         urls = []
         for endpoint in endpoints:
@@ -242,7 +243,7 @@ Properties:
         for obj in resources.values():
             if not obj['name']:
                 continue
-            ApiGatewayResouce(build_resource_name(obj['name'], name), {
+            ApiGatewayResource(build_resource_name(obj['name'], name), {
                 'parent': build_resource_id(resources[obj['parent']]['name'], name),
                 'path_part': obj['part'],
                 'rest_api': name
@@ -262,7 +263,7 @@ Properties:
         outputs = parent_template['Outputs']
         outputs[name + 'Endpoint'] = make_output(Custom('!Sub', [
             'https://${gateway}.execute-api.${AWS::Region}.${AWS::URLSuffix}/' + stage,
-            { 'gateway': Custom('!Ref', name) }
+            {'gateway': Custom('!Ref', name)}
         ]))
         for i, url in enumerate(urls):
             outputs['{}Path{}'.format(name, i + 1)] = make_output(url)

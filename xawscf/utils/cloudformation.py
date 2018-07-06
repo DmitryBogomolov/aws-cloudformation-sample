@@ -27,7 +27,7 @@ STATUS_TO_COLOR = {
 def get_stack_info(cf, stack_name):
     try:
         return cf.describe_stacks(StackName=stack_name)['Stacks'][0]
-    except:
+    except: # pylint: disable=bare-except
         return None
 
 def is_stack_in_progress(stack):
@@ -35,7 +35,7 @@ def is_stack_in_progress(stack):
 
 def get_stack_events(cf, stack_name, timestamp):
     events = []
-    args = { 'StackName': stack_name }
+    args = {'StackName': stack_name}
     is_valid_event = lambda event: event['Timestamp'] > timestamp
     while True:
         # Stack may become deleted during request.
@@ -46,13 +46,13 @@ def get_stack_events(cf, stack_name, timestamp):
         batch = list(filter(is_valid_event, response['StackEvents']))
         events.extend(batch)
         token = response.get('NextToken')
-        if token and len(batch) > 0:
+        if token and batch:
             args['NextToken'] = token
         else:
             break
     return events
 
-def watch_stack_status(cf, stack_name):
+def watch_stack_status(cf, logger, stack_name):
     stack = get_stack_info(cf, stack_name)
     start_time = stack.get('LastUpdatedTime', stack['CreationTime'])
     event_timestamp = start_time - timedelta(seconds=1)
@@ -61,16 +61,18 @@ def watch_stack_status(cf, stack_name):
 
     while True:
         events = get_stack_events(cf, stack_name, event_timestamp)
-        if len(events) > 0:
+        if events:
             event_timestamp = events[0]['Timestamp']
             for event in reversed(events):
                 status = event['ResourceStatus']
                 reason = event.get('ResourceStatusReason', '')
-                # TODO: Use `log` here (after it is updated).
-                print(str((event['Timestamp'] - start_time).seconds).rjust(3),
+                logger.info(' '.join((
+                    str((event['Timestamp'] - start_time).seconds).rjust(3),
                     paint(STATUS_TO_COLOR[status], align(status)),
-                    align(event['ResourceType']), align(event['LogicalResourceId']),
-                    reason)
+                    align(event['ResourceType']),
+                    align(event['LogicalResourceId']),
+                    reason
+                )))
                 if status.endswith('_FAILED') and reason != 'Resource creation cancelled':
                     errors.append('{} {} {}'.format(
                         event['ResourceType'], event['LogicalResourceId'], reason))
@@ -80,8 +82,8 @@ def watch_stack_status(cf, stack_name):
                 break
         time.sleep(3)
 
-    return ';'.join(errors) if len(errors) > 0 else ''
+    return ';'.join(errors) if errors else ''
 
 def get_sources_bucket(cf, stack_name):
     outputs = get_stack_info(cf, stack_name)['Outputs']
-    return next(filter(lambda obj: obj['OutputKey'] == SOURCES_BUCKET, outputs))['OutputValue']
+    return next(obj['OutputValue'] for obj in outputs if obj['OutputKey'] == SOURCES_BUCKET)

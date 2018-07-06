@@ -12,7 +12,10 @@ setup(
     author='Dmitry Bogomolov',
     license='MIT',
     packages=find_packages(),
-    install_requires=['boto3', 'PyYAML'],
+    install_requires=[
+        'boto3 >= 1.7.9',
+        'PyYAML >= 3.12'
+    ],
     scripts=['bin/xawscf'],
     test_suite='run_tests'
 )

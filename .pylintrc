@@ -1,0 +1,42 @@
+[BASIC]
+
+include-naming-hint=yes
+
+good-names=
+        logger,
+        maxDiff
+
+# Naming hint for argument names
+argument-name-hint=(([a-z][a-z0-9_]{0,30})|(_[a-z0-9_]*))$
+
+# Regular expression matching correct argument names
+argument-rgx=(([a-z][a-z0-9_]{0,30})|(_[a-z0-9_]*))$
+
+# Naming hint for variable names
+variable-name-hint=(([a-z][a-z0-9_]{0,30})|(_[a-z0-9_]*))$
+
+# Regular expression matching correct variable names
+variable-rgx=(([a-z][a-z0-9_]{0,30})|(_[a-z0-9_]*))$
+
+# Naming hint for method names
+method-name-hint=(([a-z][a-z0-9_]{2,40})|(_[a-z0-9_]*))$
+
+# Regular expression matching correct method names
+method-rgx=(([a-z][a-z0-9_]{2,40})|(_[a-z0-9_]*))$
+
+[VARIABLES]
+
+additional-builtins=FileNotFoundError
+
+[MESSAGES CONTROL]
+
+disable=missing-docstring,
+        logging-format-interpolation,
+        bad-continuation,
+        missing-super-argument,
+        similarities
+
+[MISCELLANEOUS]
+
+# List of note tags to take in consideration, separated by a comma.
+notes=

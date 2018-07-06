@@ -1,19 +1,20 @@
 import unittest
 from datetime import date
 from .. import role
-from ...utils.yaml import Custom
+from ...utils.loader import Custom
 
 class TestRole(unittest.TestCase):
+    # pylint: disable=invalid-name
     def test_dump_Role(self):
         self.maxDiff = None
         resources = {}
         obj = role.Role('Role1', {
             'statement': ['s1', 's2']
-        }, { 'project': 'project-1' })
+        }, {'project': 'project-1'})
         obj.PRINCIPAL_SERVICE = 'principal-1'
         obj.MANAGED_POLICIES = ['managed-1']
         obj.STATEMENT_TEMPLATE = '[1]'
-        obj.dump({ 'Resources': resources })
+        obj.dump({'Resources': resources})
 
         self.assertEqual(resources, {
             'Role1': {
@@ -24,7 +25,7 @@ class TestRole(unittest.TestCase):
                         'Statement': [{
                             'Effect': 'Allow',
                             'Action': 'sts:AssumeRole',
-                            'Principal': { 'Service': 'principal-1' }
+                            'Principal': {'Service': 'principal-1'}
                         }]
                     },
                     'Path': '/',

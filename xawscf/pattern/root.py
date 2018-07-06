@@ -28,9 +28,9 @@ Outputs:
         self.functions = []
         self.statemachines = []
 
-        for name, source in self.get('resources', {}).items():
-            Resource = self.RESOURCE_TYPES[source['type']]
-            resource = Resource(name, source, self)
+        for name, obj in self.get('resources', {}).items():
+            resource_cls = self.RESOURCE_TYPES[obj['type']]
+            resource = resource_cls(name, obj, self)
             self.resources.append(resource)
             if resource.TYPE == 'function':
                 self.functions.append(resource)
@@ -54,5 +54,5 @@ Outputs:
         return find_by_name(self.statemachines, name)
 
 
-def register_resource(Resource):
-    Root.RESOURCE_TYPES[Resource.TYPE] = Resource
+def register_resource(resource_cls):
+    Root.RESOURCE_TYPES[resource_cls.TYPE] = resource_cls
