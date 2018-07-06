@@ -6,7 +6,7 @@ Different aws-cloudformation resource snippets
 ## environment
 
 ```bash
-pip3 install -r requirements.txt
+make install-requirements
 ```
 
 Would be usefull to have **awscli** [installed](https://docs.aws.amazon.com/cli/latest/userguide/installing.html).
@@ -14,14 +14,10 @@ Would be usefull to have **awscli** [installed](https://docs.aws.amazon.com/cli/
 ## install
 
 ```bash
-pip3 install .
-```
-
-```bash
-python3 setup.py install
+make install
 ```
 
 
 ```bash
-python3 setup.py develop
+make develop
 ```
