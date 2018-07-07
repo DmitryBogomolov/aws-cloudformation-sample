@@ -2,7 +2,7 @@
 Gets cloudwatch logs for lambda function.
 '''
 
-from logging import getLogger
+from logging import getLogger, StreamHandler, FileHandler, Formatter, INFO
 import re
 from datetime import datetime
 from collections import namedtuple
@@ -11,6 +11,62 @@ from ..utils.parallel import run_parallel
 from ..utils.text_painter import colors, paint
 
 logger = getLogger(__name__)
+events_logger = getLogger('events')   # pylint: disable=invalid-name
+events_logger.setLevel(INFO)
+
+def to_strings(items):
+    return map(str, items)
+
+# pylint: disable=no-self-use
+class LogEntryFormatter(Formatter):
+    def _process_header(self, header):
+        return to_strings(header)
+
+    def _process_footer(self, footer):
+        return to_strings(footer)
+
+    def _process_item(self, item):
+        return to_strings(item)
+
+    def format(self, record):
+        header, footer, items = record.msg
+        lines = []
+        lines.append(' '.join(self._process_header(header)))
+        for item in items:
+            lines.append(' '.join(self._process_item(item)))
+        lines.append(' '.join(self._process_footer(footer)))
+        lines.append('')
+        return '\n'.join(lines)
+
+
+def make_colored(color_items, args):
+    return (paint(*pair) for pair in zip(color_items, to_strings(args)))
+
+class ColoredLogEntryFormatter(LogEntryFormatter):
+    HEADER_COLORS = (colors.GREEN, colors.YELLOW, colors.BLUE, colors.BLUE)
+    FOOTER_COLORS = (colors.BLUE, colors.ORANGE)
+    ITEM_COLORS = (colors.BLUE, colors.RESET)
+
+    def _process_header(self, header):
+        return make_colored(self.HEADER_COLORS, header)
+
+    def _process_footer(self, footer):
+        return make_colored(self.FOOTER_COLORS, footer)
+
+    def _process_item(self, item):
+        return make_colored(self.ITEM_COLORS, item)
+
+
+def setup_events_logger(file_name):
+    console_handler = StreamHandler()
+    console_handler.setFormatter(ColoredLogEntryFormatter())
+    events_logger.addHandler(console_handler)
+
+    if file_name:
+        file_handler = FileHandler(file_name, mode='w', encoding='utf8')
+        file_handler.setFormatter(LogEntryFormatter())
+        events_logger.addHandler(file_handler)
+
 
 RE_STREAM_NAME = re.compile(r'^.*\[(.*)\](.*)$')
 RE_INVOCATION_START = re.compile(r'^START RequestId: (.*)Version: (.*)$')
@@ -27,21 +83,6 @@ LogEntry = namedtuple('LogEntry', [
 ])
 
 LogItem = namedtuple('LogItem', ['timestamp', 'message'])
-
-HEADER_TEMPLATE = '{instance_id} {request_id} {timestamp} {span}'.format(
-    instance_id=paint(colors.GREEN, '{e.instance_id}'),
-    request_id=paint(colors.YELLOW, '{e.request_id}'),
-    timestamp=paint(colors.BLUE, '{timestamp}'),
-    span=paint(colors.BLUE, '{e.span}')
-)
-FOOTER_TEMPLATE = '{duration} {memory_size}'.format(
-    duration=paint(colors.BLUE, '{e.duration}'),
-    memory_size=paint(colors.ORANGE, '{e.memory_size}')
-)
-ITEM_TEMPLATE = '{offset} {message}'.format(
-    offset=paint(colors.BLUE, '{offset:6}'),
-    message='{message}'
-)
 
 def find_index(start, end, regexp, events):
     for i in range(start, end):
@@ -120,14 +161,14 @@ def load_all_events(logs, function_name, group_name, stream_names):
 
 def print_event(event):
     timestamp = datetime.fromtimestamp(event.start / 1E3).replace(microsecond=0).isoformat()
-    logger.info(HEADER_TEMPLATE.format(e=event, timestamp=timestamp))
-    for item in event.items:
-        logger.info(ITEM_TEMPLATE.format(
-            offset=item.timestamp - event.start, message=item.message.strip()))
-    logger.info(FOOTER_TEMPLATE.format(e=event))
-    logger.info('')
+    header = (event.instance_id, event.request_id, timestamp, event.span)
+    footer = (event.duration, event.memory_size)
+    items = [(str(item.timestamp - event.start).rjust(4), item.message.strip())
+        for item in event.items]
+    events_logger.info((header, footer, items))
 
-def run(pattern, name):
+def run(pattern, name, file_name=None):
+    setup_events_logger(file_name)
     logs = get_client(pattern, 'logs')
     function = pattern.get_function(name)
     if not function:
