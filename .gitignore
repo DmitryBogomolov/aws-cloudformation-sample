@@ -4,3 +4,4 @@ __pycache__
 .package
 .aws
 *.egg-info
+env

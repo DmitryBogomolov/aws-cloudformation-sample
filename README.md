@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/DmitryBogomolov/aws-cloudformation-sample.svg?branch=master)](https://travis-ci.org/DmitryBogomolov/aws-cloudformation-sample)
+[![CI](https://github.com/DmitryBogomolov/aws-cloudformation-sample/actions/workflows/ci.yml/badge.svg)](https://github.com/DmitryBogomolov/aws-cloudformation-sample/actions/workflows/ci.yml)
 
 # aws-cloudformation-sample
 Different aws-cloudformation resource snippets

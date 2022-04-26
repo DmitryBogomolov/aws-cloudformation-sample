@@ -15,6 +15,9 @@ stop:
 exec:
 	docker exec -it $(name) sh
 
+make-env:
+	python3 -m venv env
+
 install-requirements:
 	pip3 install -r requirements.txt
 
