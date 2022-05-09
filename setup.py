@@ -1,7 +1,10 @@
 from setuptools import setup, find_packages
 
-with open('README.md', 'r') as f:
-    long_description = f.read()
+with open('README.md', mode='r', encoding='utf-8') as file_object:
+    long_description = file_object.read()
+
+with open('requirements.txt', mode='r', encoding='utf-8') as file_object:
+    requirements = file_object.readlines()
 
 setup(
     name='xawscf',
@@ -12,10 +15,7 @@ setup(
     author='Dmitry Bogomolov',
     license='MIT',
     packages=find_packages(),
-    install_requires=[
-        'boto3 >= 1.7.9',
-        'PyYAML >= 3.12'
-    ],
+    install_requires=requirements,
     scripts=['bin/xawscf'],
     test_suite='run_tests'
 )
