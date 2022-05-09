@@ -2,7 +2,7 @@ from os import getcwd, path
 import yaml
 
 # pylint: disable=too-few-public-methods
-class Custom(object):
+class Custom:
     def __init__(self, tag, value):
         self.tag = tag
         self.value = value
@@ -57,9 +57,9 @@ def load_template(template: str):
     return yaml.load(template, Loader=yaml.Loader)
 
 def load_template_from_file(file_path: str):
-    with open(file_path, 'r') as file_object:
+    with open(file_path, mode='r', encoding='utf-8') as file_object:
         return load_template(file_object)
 
 def save_template_to_file(file_path: str, data):
-    with open(file_path, 'w') as file_object:
+    with open(file_path, mode='w', encoding='utf-8') as file_object:
         yaml.dump(data, file_object, default_flow_style=False, Dumper=yaml.Dumper)

@@ -2,7 +2,7 @@ import unittest
 from .. import dynamodb_table
 from ...utils.loader import Custom
 
-class StubSource(object):
+class StubSource:
     def __init__(self, data):
         self._data = data
 

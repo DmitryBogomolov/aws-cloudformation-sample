@@ -6,13 +6,13 @@ import inspect
 from ..pattern.pattern import get_pattern
 
 # pylint: disable=too-few-public-methods
-class Parameter(object):
+class Parameter:
     def __init__(self, name):
         self.name = name
 
 
 # pylint: disable=too-few-public-methods
-class Command(object):
+class Command:
     def __init__(self, name, execute, description, parameters):
         self.name = name
         self.execute = execute

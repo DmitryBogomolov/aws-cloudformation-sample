@@ -5,7 +5,7 @@ from .. import loader
 FILE_NAME = 'test.yaml'
 
 def create_file(content):
-    with open(FILE_NAME, 'w') as file_object:
+    with open(FILE_NAME, mode='w', encoding='utf-8') as file_object:
         file_object.write(content)
 
 class TestYaml(unittest.TestCase):
@@ -19,7 +19,7 @@ class TestYaml(unittest.TestCase):
 
     def check_save(self, obj, expected):
         loader.save_template_to_file(FILE_NAME, obj)
-        with open(FILE_NAME, 'r') as file_object:
+        with open(FILE_NAME, mode='r', encoding='utf-8') as file_object:
             content = file_object.read()
         self.assertEqual(content, expected)
 
@@ -66,7 +66,7 @@ class TestYaml(unittest.TestCase):
         }, "a: !Sub\n- test\n- b: !Ref 'c'\n  d: !GetAtt 'e'\n")
 
     def test_load_with_included(self):
-        with open('file1.yaml', 'w') as file_object:
+        with open('file1.yaml', mode='w', encoding='utf-8') as file_object:
             file_object.write('b: test')
         try:
             self.check_load('a: !include file1.yaml', {'a': {'b': 'test'}})

@@ -17,7 +17,7 @@ class TestClient(unittest.TestCase):
             'tester': stub
         }
         # pylint: disable=too-few-public-methods
-        class StubSession(object):
+        class StubSession:
             def __init__(self, **kwargs):
                 self.__class__.args = kwargs
 

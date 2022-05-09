@@ -5,8 +5,8 @@ from ...utils.helper import PATTERN_NAME
 
 class TestPattern(unittest.TestCase):
     def test_get_pattern(self):
-        with open(PATTERN_NAME, 'w') as f:
-            f.write('Test: test')
+        with open(PATTERN_NAME, mode='w', encoding='utf-8') as file_object:
+            file_object.write('Test: test')
 
         try:
             obj = pattern.get_pattern('')
@@ -17,8 +17,8 @@ class TestPattern(unittest.TestCase):
 
     def test_get_pattern_named(self):
         name = PATTERN_NAME + '1'
-        with open(name, 'w') as f:
-            f.write('Test: test')
+        with open(name, mode='w', encoding='utf-8') as file_object:
+            file_object.write('Test: test')
 
         try:
             obj = pattern.get_pattern(name)

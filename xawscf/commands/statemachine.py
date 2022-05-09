@@ -19,8 +19,7 @@ def wait(stepfunctions, execution_arn):
         response = stepfunctions.describe_execution(executionArn=execution_arn)
         if response['status'] != 'RUNNING':
             break
-        else:
-            time.sleep(1)
+        time.sleep(1)
     return response
 
 # pylint: disable=redefined-builtin
