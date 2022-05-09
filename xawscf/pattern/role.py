@@ -37,6 +37,6 @@ Properties:
             properties['ManagedPolicyArns'] = managed_policies.copy()
         policy = properties['Policies'][0]
         policy['PolicyName'] = self.name + 'Policy'
-        statement = yaml.load(self.STATEMENT_TEMPLATE)
+        statement = yaml.load(self.STATEMENT_TEMPLATE, Loader=yaml.Loader)
         policy['PolicyDocument']['Statement'] = statement
         statement.extend(self.get('statement', []))

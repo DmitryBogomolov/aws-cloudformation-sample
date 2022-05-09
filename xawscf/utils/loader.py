@@ -55,8 +55,8 @@ yaml.add_constructor('!include', include_file_constructor)
 
 def load(file_path):
     with open(file_path, 'r') as file_object:
-        return yaml.load(file_object)
+        return yaml.load(file_object, Loader=yaml.Loader)
 
 def save(file_path, data):
     with open(file_path, 'w') as file_object:
-        yaml.dump(data, file_object, default_flow_style=False)
+        yaml.dump(data, file_object, default_flow_style=False, Dumper=yaml.Dumper)

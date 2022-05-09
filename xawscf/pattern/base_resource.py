@@ -9,7 +9,7 @@ class BaseResource(Base):
 
     # pylint: disable=arguments-differ
     def dump(self, parent_template):
-        template = yaml.load(self.TEMPLATE)
+        template = yaml.load(self.TEMPLATE, Loader=yaml.Loader)
         self._dump(template, parent_template)
         parent_template['Resources'][self.name] = template
 

@@ -29,7 +29,7 @@ class Base(object):
         return obj
 
     def dump(self):
-        template = yaml.load(self.TEMPLATE)
+        template = yaml.load(self.TEMPLATE, Loader=yaml.Loader)
         self._dump(template)
         return template
 
