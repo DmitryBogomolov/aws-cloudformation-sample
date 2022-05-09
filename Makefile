@@ -20,6 +20,7 @@ make-env:
 
 install-requirements:
 	pip3 install -r requirements.txt
+	pip3 install pylint
 
 install:
 	python3 setup.py install
