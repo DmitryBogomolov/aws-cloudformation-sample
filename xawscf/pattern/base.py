@@ -1,4 +1,4 @@
-import yaml
+from ..utils.loader import load_template
 
 DEFAULT = object()
 
@@ -29,7 +29,7 @@ class Base(object):
         return obj
 
     def dump(self):
-        template = yaml.load(self.TEMPLATE, Loader=yaml.Loader)
+        template = load_template(self.TEMPLATE)
         self._dump(template)
         return template
 

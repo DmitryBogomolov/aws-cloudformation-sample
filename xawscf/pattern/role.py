@@ -1,5 +1,5 @@
-import yaml
 from ..utils.helper import get_full_name
+from ..utils.loader import load_template
 from .base_resource import BaseResource
 
 
@@ -37,6 +37,6 @@ Properties:
             properties['ManagedPolicyArns'] = managed_policies.copy()
         policy = properties['Policies'][0]
         policy['PolicyName'] = self.name + 'Policy'
-        statement = yaml.load(self.STATEMENT_TEMPLATE, Loader=yaml.Loader)
+        statement = load_template(self.STATEMENT_TEMPLATE)
         policy['PolicyDocument']['Statement'] = statement
         statement.extend(self.get('statement', []))

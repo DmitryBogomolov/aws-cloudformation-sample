@@ -14,11 +14,11 @@ class TestYaml(unittest.TestCase):
 
     def check_load(self, content, expected):
         create_file(content)
-        obj = loader.load(FILE_NAME)
+        obj = loader.load_template_from_file(FILE_NAME)
         self.assertEqual(obj, expected)
 
     def check_save(self, obj, expected):
-        loader.save(FILE_NAME, obj)
+        loader.save_template_to_file(FILE_NAME, obj)
         with open(FILE_NAME, 'r') as file_object:
             content = file_object.read()
         self.assertEqual(content, expected)
