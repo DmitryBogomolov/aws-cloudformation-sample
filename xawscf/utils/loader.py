@@ -2,7 +2,7 @@ from os import getcwd, path
 import yaml
 
 # pylint: disable=too-few-public-methods
-class Custom(object):
+class Custom:
     def __init__(self, tag, value):
         self.tag = tag
         self.value = value
@@ -49,14 +49,17 @@ def include_file_constructor(loader, node):
     path_to_file = path.realpath(path.join(path.dirname(loader.stream.name), value))
     if path.commonprefix([CWD, path_to_file]) != CWD:
         raise Exception('File path *{}* is not valid'.format(value))
-    return load(path_to_file)
+    return load_template_from_file(path_to_file)
 
 yaml.add_constructor('!include', include_file_constructor)
 
-def load(file_path):
-    with open(file_path, 'r') as file_object:
-        return yaml.load(file_object)
+def load_template(template: str):
+    return yaml.load(template, Loader=yaml.Loader)
 
-def save(file_path, data):
-    with open(file_path, 'w') as file_object:
-        yaml.dump(data, file_object, default_flow_style=False)
+def load_template_from_file(file_path: str):
+    with open(file_path, mode='r', encoding='utf-8') as file_object:
+        return load_template(file_object)
+
+def save_template_to_file(file_path: str, data):
+    with open(file_path, mode='w', encoding='utf-8') as file_object:
+        yaml.dump(data, file_object, default_flow_style=False, Dumper=yaml.Dumper)

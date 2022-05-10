@@ -1,8 +1,8 @@
-import yaml
+from ..utils.loader import load_template
 
 DEFAULT = object()
 
-class Base(object):
+class Base:
     TEMPLATE = None
 
     def __init__(self, source):
@@ -13,8 +13,7 @@ class Base(object):
         if value is None:
             if default is DEFAULT:
                 raise KeyError('Field "{}" is not defined.'.format(name))
-            else:
-                return default
+            return default
         return value
 
     def get_path(self, name, default=DEFAULT):
@@ -24,12 +23,11 @@ class Base(object):
             if obj is None:
                 if default is DEFAULT:
                     raise KeyError('Field "{}" in "{}" is not defined.'.format(item, name))
-                else:
-                    return default
+                return default
         return obj
 
     def dump(self):
-        template = yaml.load(self.TEMPLATE)
+        template = load_template(self.TEMPLATE)
         self._dump(template)
         return template
 

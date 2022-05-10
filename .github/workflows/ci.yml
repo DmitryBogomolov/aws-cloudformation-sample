@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: 3.6
       - run: make install-requirements
-      # - run: make lint
+      - run: make lint
       - run: make test
       - run: ./check-examples.sh
       # - run: ./check-container.sh

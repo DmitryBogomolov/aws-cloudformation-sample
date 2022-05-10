@@ -34,7 +34,8 @@ disable=missing-docstring,
         logging-format-interpolation,
         bad-continuation,
         missing-super-argument,
-        similarities
+        similarities,
+        consider-using-f-string,
 
 [MISCELLANEOUS]
 

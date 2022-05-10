@@ -3,7 +3,7 @@ from os import path
 from .. import helper
 
 # pylint: disable=too-few-public-methods
-class Tester(object):
+class Tester:
     def __init__(self, **kwargs):
         self.data = kwargs
 

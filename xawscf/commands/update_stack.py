@@ -12,8 +12,8 @@ from ..utils.cloudformation import get_stack_info, is_stack_in_progress, watch_s
 logger = getLogger(__name__)
 
 def get_template_body():
-    with open(helper.get_processed_template_path()) as f:
-        return f.read()
+    with open(helper.get_processed_template_path(), encoding='utf-8') as file_object:
+        return file_object.read()
 
 def create_change_set(cf, stack_name, change_set_name, template_body):
     cf.create_change_set(StackName=stack_name, ChangeSetName=change_set_name,
@@ -22,6 +22,7 @@ def create_change_set(cf, stack_name, change_set_name, template_body):
     while True:
         response = cf.describe_change_set(StackName=stack_name, ChangeSetName=change_set_name)
         status = response['Status']
+        # pylint: disable=consider-using-in
         if status == 'CREATE_COMPLETE' or status == 'FAILED':
             break
         time.sleep(3)
